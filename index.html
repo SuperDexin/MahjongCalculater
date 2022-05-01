@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Document</title>
+	<style>
+		#hands {
+			border: 1px black solid;
+			height: calc(3em + 2px);
+			width: calc(28em + 28px);
+			padding: 1px;
+		}
+		#hands > button {
+			height: 3em;
+			width: 2em;
+			font-size: 1em;
+			background: white;
+			margin: 1px;
+			border: 1px black solid;
+		}
+	</style>
+	<script src="./JS.js"></script>
+</head>
+<body>
+	<h1>麻将胡牌计算器</h1>
+	<div>手牌：<button onclick=" clear_tiles()">clear</button><div id="hands"></div></div>
+	<div>输入：<div id="tiles"></div></div>
+	<br>
+	<div>结果：<br><div id="answer"></div></div>
+
+	<script>
+		let content = "";
+		for(let i = 1; i < 10; i++)
+			content += `<button id="${10+i}" onclick="choose_tile(this.id)">${i}万</button>`;
+		content += "<br>"
+		for(let i = 1; i < 10; i++)
+			content += `<button id="${20+i}" onclick="choose_tile(this.id)">${i}筒</button>`;
+		content += "<br>"
+		for(let i = 1; i < 10; i++)
+			content += `<button id="${30+i}" onclick="choose_tile(this.id)">${i}条</button>`;
+		content += "<br>"
+		content += `<button id="${41}" onclick="choose_tile(this.id)">东风</button>`;
+		content += `<button id="${43}" onclick="choose_tile(this.id)">西风</button>`;
+		content += `<button id="${45}" onclick="choose_tile(this.id)">南风</button>`;
+		content += `<button id="${47}" onclick="choose_tile(this.id)">北风</button>`;
+		content += `<button id="${51}" onclick="choose_tile(this.id)">红中</button>`;
+		content += `<button id="${53}" onclick="choose_tile(this.id)">发财</button>`;
+		content += `<button id="${55}" onclick="choose_tile(this.id)">白板</button>`;
+		document.getElementById("tiles").innerHTML = content;
+	</script>
+</body>
+</html>
