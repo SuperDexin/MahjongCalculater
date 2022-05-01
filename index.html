@@ -5,19 +5,27 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Document</title>
 	<style>
+		html body {
+			width: 100%;
+			height:  100%;
+		}
 		#hands {
 			border: 1px black solid;
-			height: calc(3em + 2px);
-			width: calc(28em + 28px);
+			height: calc(3rem + 2px);
+			width: calc(1.2rem * 14 + 28px);
 			padding: 1px;
 		}
 		#hands > button {
-			height: 3em;
-			width: 2em;
-			font-size: 1em;
+			height: 3rem;
+			width: 1.2rem;
 			background: white;
 			margin: 1px;
 			border: 1px black solid;
+			padding: 0px;
+		}
+		#tiles > button {
+			height: 2rem;
+			margin: 1px;
 		}
 	</style>
 	<script src="./JS.js"></script>
@@ -25,6 +33,7 @@
 <body>
 	<h1>麻将胡牌计算器</h1>
 	<div>手牌：<button onclick=" clear_tiles()">clear</button><div id="hands"></div></div>
+	<br>
 	<div>输入：<div id="tiles"></div></div>
 	<br>
 	<div>结果：<br><div id="answer"></div></div>
