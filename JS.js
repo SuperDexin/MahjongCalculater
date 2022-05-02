@@ -94,6 +94,8 @@ function check_hu(tiles) {
 				&& ((out_tiles)[i][0]+1 != (out_tiles)[i][1] || (out_tiles)[i][0]+2 != (out_tiles)[i][2]))
 			return "没胡";
 
+	tiles = tiles.concat(hu);
+	tiles.sort_tiles();
 	if (check_seven_pairs(tiles)) return "七对";
 	else if (check_thirteen_yao(tiles)) return "十三幺";
 	else if (check_chichen_hu(tiles)) return "和了";
