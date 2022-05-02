@@ -43,17 +43,36 @@ let all_tiles = [
 ];
 
 function check_situations(tiles) {
-	tiles.sort(function(a,b){return a-b});
-	if (tiles.length == 14) return check_hu(tiles);
-	else if (tiles.length == 13) return check_ting(tiles);
+	tiles.sort_tiles();
+
+	for (let i = 0; i < out_group_num; i ++)
+		if (out_tiles_now_num[i][0] != 3)
+			return "";
+
+	if (now_tiles_num == 14) return check_hu(tiles);
+
+	if (now_tiles_num == 13) return check_ting(tiles);
+
+	return "有问题，看见了请联系作者";
 };
 
 function check_ting(tiles) {
+	for(let i = 0; i < out_group_num; i ++)
+		if (((out_tiles)[i][0] != (out_tiles)[i][1] || (out_tiles)[i][0] != (out_tiles)[i][2])
+				&& ((out_tiles)[i][0]+1 != (out_tiles)[i][1] || (out_tiles)[i][0]+2 != (out_tiles)[i][2]))
+			return "没听";
+
+	if (now_tiles_num == 13 && tiles.length % 3 != 1)
+		return "没听";
+
+	if (tiles.length == 1)
+		return "听：" + all_tiles_dic[tiles[0]] + " ";
+
 	let tings = [];
 	for (let tile of all_tiles) {
 		let tiles_copy = tiles.copy();
 		tiles_copy.push(tile);
-		tiles_copy.sort(function(a,b){return a-b});
+		tiles_copy.sort_tiles();
 
 		if (!(check_hu(tiles_copy) == "没胡")) tings.push(tile);
 	}
@@ -70,6 +89,11 @@ function check_ting(tiles) {
 };
 
 function check_hu(tiles) {
+	for(let i = 0; i < out_group_num; i ++)
+		if (((out_tiles)[i][0] != (out_tiles)[i][1] || (out_tiles)[i][0] != (out_tiles)[i][2])
+				&& ((out_tiles)[i][0]+1 != (out_tiles)[i][1] || (out_tiles)[i][0]+2 != (out_tiles)[i][2]))
+			return "没胡";
+
 	if (check_seven_pairs(tiles)) return "七对";
 	else if (check_thirteen_yao(tiles)) return "十三幺";
 	else if (check_chichen_hu(tiles)) return "和了";
@@ -77,12 +101,18 @@ function check_hu(tiles) {
 };
 
 function check_seven_pairs(tiles) {
+	if (out_group_num != 0)
+		return false;
+
 	for (let i = 0; i < tiles.length; i += 2)
 		if (!(tiles[i] == tiles[i + 1])) return false;
 	return true;
 };
 
 function check_thirteen_yao(tiles) {
+	if (out_group_num != 0)
+		return false;
+
 	let tiles_copy = tiles.copy();
 	let orphans = [11, 19, 21, 29, 31, 39, 41, 43, 45, 47, 51, 53, 55];
 	for (let i = 0; i < tiles_copy.length; i++)
@@ -102,6 +132,13 @@ function check_thirteen_yao(tiles) {
 
 function check_chichen_hu(tiles) {
 	let pairs_index = [];
+
+	if (tiles.length == 2)
+		if (tiles[0] == tiles[1])
+			return "胡了";
+		else
+			return "没胡";
+
 	for (let i = 0; i < tiles.length; i++)
 		if (i < tiles.length - 1 && tiles[i] == tiles[i + 1] && (i == 0 || !(tiles[i] == tiles[i - 1]))) pairs_index.push(i);
 
@@ -116,7 +153,7 @@ function check_chichen_hu(tiles) {
 
 		let triplets_num = triplets_index.length;
 		
-		if (triplets_num == 4) return true;
+		if (triplets_num == (tiles.length - 2) / 3) return true;
 		
 		if (check_sequences(tiles_copy)) return true;
 		
@@ -184,53 +221,187 @@ function check_sequences(tiles) {
 
 
 
-let hand_tiles = [];
+
+
 let now_tiles_num = 0;
+let out_group_num = 0;
+
+let tile_region = 0; // 0 手牌，5 和牌，1234 副
+
+let hand_tiles = [];
+let hidden_tiles_num = [0];
+
+let hu = [];
+let hu_num = [0];
+
+let out_tiles = [[],[],[],[]];
+let out_tiles_now_num = [[0], [0], [0], [0]];
+
 
 function choose_tile(id){
 	id = parseInt(id);
-	if (now_tiles_num >= 0 && now_tiles_num < 14){
+	let tiles;
+	let max;
+	let now;
+	let region;
+
+	switch(tile_region){
+		case (0): {
+			tiles = hand_tiles;
+			max = 13 - out_group_num * 3;
+			now = hidden_tiles_num;
+			region = document.getElementById("hands");
+			break;
+		}
+		case (5): {
+			tiles = hu;
+			max = 1;
+			now = hu_num;
+			region = document.getElementById("winner");
+			break;
+		}
+		default: {
+			tiles = out_tiles[tile_region - 1];
+			max = 3;
+			now = out_tiles_now_num[tile_region - 1];
+			region = document.getElementById(`out_tiles${tile_region}`);
+		}
+	}
+
+	if (now[0] >= 0 && now[0] < max){
 
 		let same_tiles_num = 0;
-		for(let tile of hand_tiles)
+		let all = hand_tiles.concat(hu);
+		for(let tile of out_tiles)
+			all = all.concat(tile);
+		all.sort_tiles();
+		for(tile of all)
 			if (tile == id) same_tiles_num++;
 		if (same_tiles_num >= 4) return;
 
 		now_tiles_num ++;
-		hand_tiles.push(id);
-		hand_tiles.sort(function(a,b){return a-b});
+		now[0]++;
+		tiles.push(id);
+		tiles.sort_tiles();
+
 		let content = "";
-		for(let i = 0; i < now_tiles_num; i++){
-			content += `<button onclick="delete_tile(${i})">${all_tiles_dic[hand_tiles[i]]}</button>`;
+		for(let i = 0; i < now[0]; i++){
+			content += `<button id="hand${i}" onclick="delete_tile(${i}, ${tile_region})">${all_tiles_dic[tiles[i]]}</button>`;
 		}
-		document.getElementById("hands").innerHTML = content;
+
+		region.innerHTML = content;
 	}
-	if (now_tiles_num == 13 || now_tiles_num == 14)
+
+	if ((now_tiles_num == 13 && hu_num[0] == 0) || now_tiles_num == 14 )
 		print(check_situations(hand_tiles.copy()));
 }
 
-function delete_tile(index){
-	index=parseInt(index);
-	hand_tiles.splice(index, 1);
-	now_tiles_num--;
-	hand_tiles.sort(function(a,b){return a-b});
-	let content = "";
-	for(let i = 0; i < now_tiles_num; i++){
-		content += `<button onclick="delete_tile(${i})">${all_tiles_dic[hand_tiles[i]]}</button>`;
+function delete_tile(index, now_region){
+	index = parseInt(index);
+	tile_region = parseInt(now_region);
+	document.getElementById(`tile${tile_region}`).checked = true;
+	let tiles;
+	let max;
+	let now;
+	let region;
+
+	switch(tile_region){
+		case (0): {
+			tiles = hand_tiles;
+			max = 13 - out_group_num * 3;
+			now = hidden_tiles_num;
+			region = document.getElementById("hands");
+			break;
+		}
+		case (5): {
+			tiles = hu;
+			max = 1;
+			now = hu_num;
+			region = document.getElementById("winner");
+			break;
+		}
+		default: {
+			tiles = out_tiles[tile_region - 1];
+			max = 3;
+			now = out_tiles_now_num[tile_region - 1];
+			region = document.getElementById(`out_tiles${tile_region}`);
+		}
 	}
-	document.getElementById("hands").innerHTML = content;
-	if (now_tiles_num == 13 || now_tiles_num == 14)
+	print(tiles);
+	
+	now_tiles_num --;
+	now[0] --;
+	tiles.splice(index, 1);
+	
+	let content = "";
+	for(let i = 0; i < now[0]; i++){
+		content += `<button id="hand${i}" onclick="delete_tile(${i}, ${tile_region})">${all_tiles_dic[tiles[i]]}</button>`;
+	}
+
+	region.innerHTML = content;
+
+	if ((now_tiles_num == 13 && hu_num[0] == 0) || now_tiles_num == 14 )
 		print(check_situations(hand_tiles.copy()));
+	else
+		print("");
 }
 
 function clear_tiles(){
 	document.getElementById("hands").innerHTML = "";
-	hand_tiles = [];
+	document.getElementById("winner").innerHTML = "";
+	show_tiles(out_group_num);
 	now_tiles_num = 0;
+	hand_tiles = [];
+	hidden_tiles_num = [0];
+	hu = [];
+	hu_num = [0];
+	out_tiles = [[],[],[],[]];
+	out_tiles_now_num = [[0], [0], [0], [0]];
 	print("");
+	document.getElementById(`tile${tile_region}`).checked = true;
 }
 
 
+function show_tiles(value){
+	value = parseInt(value);
+
+	if (value < out_group_num){
+		document.getElementById(`tile${value}`).checked = true;
+	}
+
+	out_group_num = value;
+	if (13 - out_group_num * 3 < hidden_tiles_num[0]){
+		hand_tiles.splice(13 - out_group_num * 3);
+		hidden_tiles_num[0] = 13 - out_group_num * 3;
+		let content = "";
+		for(let i = 0; i < hidden_tiles_num[0]; i++)
+			content += `<button id="hand${i}" onclick="delete_tile(${i}, 0)">${all_tiles_dic[hand_tiles[i]]}</button>`;
+		document.getElementById("hands").innerHTML = content;
+	}
+
+
+	let region = document.getElementById("out_tiles");
+	let content = "";
+	for (let i = 1; i <= out_group_num; i++){
+		content += "<div>";
+		content += `<label for="tile${i}">副露${i}</label><br>`;
+		content += `<label for="tile${i}"><div id="out_tiles${i}" class="out_tiles"></div></label><br>`;
+		content += `<input type="radio" name="hand_tiles" value=${i} onchange="change_region(this.value)" id="tile${i}" style="margin: 0;">`;
+		content += "</div>";
+	}
+	region.innerHTML = content;
+
+	document.getElementById("hands").style.width = `calc(1.2rem * ${13 - out_group_num * 3} + ${2 * (13 - out_group_num * 3)}px)`;
+	region.style.width = `calc(${out_group_num} * (1.2rem * 3 + 6px)) + ${out_group_num} * 2px`;
+	
+	out_tiles = [[],[],[],[]];
+	out_tiles_now_num = [[0], [0], [0], [0]];
+	now_tiles_num = hidden_tiles_num[0];
+}
+
+function change_region(value){
+	tile_region = parseInt(value);
+}
 
 function print(str){
 	document.getElementById("answer").innerHTML = str;
@@ -241,4 +412,8 @@ Array.prototype.copy = function(){
 	for (let i = 0; i < this.length; i++)
 		a.push(this[i]);
 	return a;
+}
+
+Array.prototype.sort_tiles = function(){
+	this.sort(function(a,b){return a-b});
 }

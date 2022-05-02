@@ -2,53 +2,211 @@
 <html>
 <head>
 	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
 	<title>Document</title>
 	<style>
 		html body {
 			width: 100%;
 			height:  100%;
+			text-align: center;
+		}
+		.background {
+			width: 95%;
+			display: inline-block;
+			text-align: left;
+			overflow-x: hidden;
+			overflow-y: scroll;
 		}
 		#hands {
 			border: 1px black solid;
-			height: calc(3rem + 2px);
-			width: calc(1.2rem * 14 + 28px);
+			height: calc(2.5rem + 2px);
+			width: calc(1.2rem * 13 + 28px);
+			padding: 1px;
+			display: flex;
+			align-items: flex-start;
+		}
+		#winner {
+			border: 1px black solid;
+			height: calc(2.5rem + 2px);
+			width: calc(1.2rem + 2px);
 			padding: 1px;
 		}
 		#hands > button {
-			height: 3rem;
+			height: 2.5rem;
+			width: 1.2rem;
+			padding: 0px;
+			margin: 1px;
+			background: white;
+			border-left: 1px;
+			border-right: 3px;
+			border-top: 3px;
+			border-bottom: 1px;
+			border-radius: 3px;
+			border-style: outset;
+			border-color: darkgray;
+		}
+		#winner > button {
+			height: 2.5rem;
 			width: 1.2rem;
 			background: white;
 			margin: 1px;
 			border: 1px black solid;
 			padding: 0px;
 		}
-		#tiles > button {
-			height: 2rem;
-			margin: 1px;
+		#show_tiles {
+			height: 1rem;
+			width: 100%;
 		}
+		#show_tiles button{
+			height: auto;
+			width: 1.2rem;
+			background: white;
+			margin: 1px;
+			border: 1px black solid;
+			padding: 0px;
+		}
+		#out_tiles {
+			display: flex;
+			justify-content: space-between;
+			margin: 0;
+			padding: 0;
+		}
+		.out_tiles {
+			border: 1px black solid;
+			height: calc(2.5rem + 2px);
+			width: calc(1.2rem * 3 + 6px);
+			padding: 1px;
+			display: flex;
+			align-items: flex-start;
+		}
+		.out_tiles > button {
+			height: 2.5rem;
+			width: 1.2rem;
+			padding: 0px;
+			margin: 1px;
+			background: white;
+			border-left: 1px;
+			border-right: 3px;
+			border-top: 1px;
+			border-bottom: 3px;
+			border-radius: 3px;
+			border-style: outset;
+			border-color: darkgray;
+		}
+
+		#tiles {
+			width: 100%;
+			text-align: center;
+		}
+		#tiles > div {
+			width: 100%;
+			display: flex;
+			justify-content: space-between;
+			margin: 1rem auto;
+		}
+		#tiles button {
+			width: 2rem;
+			padding: 0;
+		}
+		.choises p {
+			margin: 0;
+			padding: 0;
+
+		}
+
 	</style>
 	<script src="./JS.js"></script>
 </head>
-<body>
-	<h1>麻将胡牌计算器</h1>
-	<div>手牌：<button onclick=" clear_tiles()">clear</button><div id="hands"></div></div>
-	<br>
-	<div>输入：<div id="tiles"></div></div>
-	<br>
-	<div>结果：<br><div id="answer"></div></div>
 
+
+<body>
+	<div class="background">
+		<h1>麻将胡牌计算器<button onclick=" clear_tiles()">clear</button></h1>
+		<br>
+		<div style="width: 95%">
+			<div style="display: flex; width: 100%;justify-content: space-between; font-size: 0.7rem;">
+				<div>
+					<label for="tile0">手牌</label><br>
+					<label for="tile0"><div id="hands"></div></label><br>
+					<input value=0 onchange="change_region(this.value)" type="radio" name="hand_tiles" id="tile0" checked="true" style="margin: 0;">
+				</div>
+
+				<div id="out_tiles"></div>
+
+				<div>
+					<label for="tile5">和牌</label><br>
+					<label for="tile5"><div id="winner"></div></label><br>
+					<input value=5 onchange="change_region(this.value)" type="radio" name="hand_tiles" id="tile5" style="margin: 0;">
+				</div>
+			</div>
+
+			<div style="display: flex; width: 100%;justify-content: space-between;">
+				<div>
+					<div id="show_tiles"></div>
+				</div>
+			</div>
+			<br>
+			<div>输入：<div id="tiles"></div></div>
+			<br>
+			<div class="choises">选项：
+				<div style="margin-left: 2rem;">
+					<p>
+						<input type="radio" name="richi" id="richi0" checked="true"><label for="richi0">无立</label>
+						<input type="radio" name="richi" id="richi1"><label for="richi1">立直</label>
+						<input type="radio" name="richi" id="richi2"><label for="richi2">两立</label>
+					</p>
+					<p>
+						<input type="checkbox" name="fortune" id="fortune1"><label for="fortune1">自摸</label>
+						<input type="checkbox" name="fortune" id="fortune2"><label for="fortune2">一发</label>
+						<input type="checkbox" name="fortune" id="fortune3"><label for="fortune3">杠花</label><br>
+						<input type="checkbox" name="fortune" id="fortune4"><label for="fortune4">抢杠</label>
+						<input type="checkbox" name="fortune" id="fortune5"><label for="fortune5">海底/河底</label>
+						<input type="checkbox" name="fortune" id="fortune6"><label for="fortune6">天/地和</label>
+					</p>
+					<p>圈风
+						<select>
+							<option checked="true">东</option>
+							<option checked="true">南</option>
+							<option checked="true">西</option>
+							<option checked="true">北</option>
+						</select>
+						门风
+						<select>
+							<option>东</option>
+							<option>南</option>
+							<option>西</option>
+							<option>北</option>
+						</select>
+					</p>
+					<p>
+						<input type="textarea" name="state" id="state1" style="width:1.5em"><label for="state1">本场</label>
+						<input type="textarea" name="state" id="state2" style="width:1.5em; margin-left: 1rem"><label for="state2">宝牌</label>
+						<select onchange="show_tiles(this.value)">
+							<option value=0 selected="true">0</option>
+							<option value=1>1</option>
+							<option value=2>2</option>
+							<option value=3>3</option>
+							<option value=4>4</option>
+						</select>副露
+					</p>
+				</div>
+			</div>
+			<br>
+			<div>结果：<br><div id="answer"></div></div>
+		</div>
+	</div>
 	<script>
-		let content = "";
-		for(let i = 1; i < 10; i++)
-			content += `<button id="${10+i}" onclick="choose_tile(this.id)">${i}万</button>`;
-		content += "<br>"
-		for(let i = 1; i < 10; i++)
-			content += `<button id="${20+i}" onclick="choose_tile(this.id)">${i}筒</button>`;
-		content += "<br>"
-		for(let i = 1; i < 10; i++)
-			content += `<button id="${30+i}" onclick="choose_tile(this.id)">${i}条</button>`;
-		content += "<br>"
+		let content = "<div>";
+		let number = ["一", "二", "三", "四", "五", "六", "七", "八", "九"];
+		for(let i = 0; i < 9; i++)
+			content += `<button id="${11+i}" onclick="choose_tile(this.id)">${number[i]}万</button>`;
+		content += "</div><div>"
+		for(let i = 0; i < 9; i++)
+			content += `<button id="${21+i}" onclick="choose_tile(this.id)">${number[i]}筒</button>`;
+		content += "</div><div>"
+		for(let i = 0; i < 9; i++)
+			content += `<button id="${31+i}" onclick="choose_tile(this.id)">${number[i]}条</button>`;
+		content += "</div><div>"
 		content += `<button id="${41}" onclick="choose_tile(this.id)">东风</button>`;
 		content += `<button id="${43}" onclick="choose_tile(this.id)">西风</button>`;
 		content += `<button id="${45}" onclick="choose_tile(this.id)">南风</button>`;
@@ -56,6 +214,7 @@
 		content += `<button id="${51}" onclick="choose_tile(this.id)">红中</button>`;
 		content += `<button id="${53}" onclick="choose_tile(this.id)">发财</button>`;
 		content += `<button id="${55}" onclick="choose_tile(this.id)">白板</button>`;
+		content += "</div>"
 		document.getElementById("tiles").innerHTML = content;
 	</script>
 </body>
