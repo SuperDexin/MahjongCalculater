@@ -42,204 +42,22 @@ let all_tiles = [
 	41, 43, 45, 47, 51, 53, 55
 ];
 
-function check_situations(tiles) {
-	tiles.sort_tiles();
 
-	for (let i = 0; i < out_group_num; i ++)
-		if (out_tiles_now_num[i][0] != 3)
-			return "";
+let now_tiles_num = 0; //总牌数 不计杠
+let out_group_num = 0; //副露数
 
-	if (now_tiles_num == 14) return check_hu(tiles);
+let tile_region = 0; //输入区域 0 手牌，5 和牌，1234 副
 
-	if (now_tiles_num == 13) return check_ting(tiles);
+let hand_tiles = []; //暗牌序列
+let hidden_tiles_num = [0]; //hidden_tiles_num[0] 暗牌数
 
-	return "有问题，看见了请联系作者";
-};
+let hu = []; //和张
+let hu_num = [0]; //hu_num[0] 和张数
 
-function check_ting(tiles) {
-	for(let i = 0; i < out_group_num; i ++)
-		if (((out_tiles)[i][0] != (out_tiles)[i][1] || (out_tiles)[i][0] != (out_tiles)[i][2])
-				&& ((out_tiles)[i][0]+1 != (out_tiles)[i][1] || (out_tiles)[i][0]+2 != (out_tiles)[i][2]))
-			return "没听";
+let out_tiles = [[],[],[],[]]; //四个副露序列
+let out_tiles_now_num = [[0], [0], [0], [0]]; //out_tiles_now_num[i][0] 副露数列中的牌数
 
-	if (now_tiles_num == 13 && tiles.length % 3 != 1)
-		return "没听";
-
-	if (tiles.length == 1)
-		return "听：" + all_tiles_dic[tiles[0]] + " ";
-
-	let tings = [];
-	for (let tile of all_tiles) {
-		let tiles_copy = tiles.copy();
-		tiles_copy.push(tile);
-		tiles_copy.sort_tiles();
-
-		if (!(check_hu(tiles_copy) == "没胡")) tings.push(tile);
-	}
-	if (tings == undefined || tings.length == 0){
-		return "没听";
-	}
-	else {
-		let content = "听：";
-		for (let ting of tings){
-			content += all_tiles_dic[ting] + " ";
-		}
-		return content;
-	}
-};
-
-function check_hu(tiles) {
-	for(let i = 0; i < out_group_num; i ++)
-		if (((out_tiles)[i][0] != (out_tiles)[i][1] || (out_tiles)[i][0] != (out_tiles)[i][2])
-				&& ((out_tiles)[i][0]+1 != (out_tiles)[i][1] || (out_tiles)[i][0]+2 != (out_tiles)[i][2]))
-			return "没胡";
-
-	tiles = tiles.concat(hu);
-	tiles.sort_tiles();
-	if (check_seven_pairs(tiles)) return "七对";
-	else if (check_thirteen_yao(tiles)) return "十三幺";
-	else if (check_chichen_hu(tiles)) return "和了";
-	return "没胡";
-};
-
-function check_seven_pairs(tiles) {
-	if (out_group_num != 0)
-		return false;
-
-	for (let i = 0; i < tiles.length; i += 2)
-		if (!(tiles[i] == tiles[i + 1])) return false;
-	return true;
-};
-
-function check_thirteen_yao(tiles) {
-	if (out_group_num != 0)
-		return false;
-
-	let tiles_copy = tiles.copy();
-	let orphans = [11, 19, 21, 29, 31, 39, 41, 43, 45, 47, 51, 53, 55];
-	for (let i = 0; i < tiles_copy.length; i++)
-		if (!(tiles_copy[i] == orphans[i]))
-			if (i == 0)
-				return false;
-			else if (!(tiles_copy[i] == tiles_copy[i - 1]))
-				return false;
-	else if (tiles_copy[i] == tiles_copy[i - 1]) {
-		tiles_copy.splice(i, 1);
-		break;
-	}
-	for (let i = 0; i < tiles_copy.length; i++)
-		if (!(tiles_copy[i] == orphans[i])) return false;
-	return true;
-};
-
-function check_chichen_hu(tiles) {
-	let pairs_index = [];
-
-	if (tiles.length == 2)
-		if (tiles[0] == tiles[1])
-			return "胡了";
-		else
-			return "没胡";
-
-	for (let i = 0; i < tiles.length; i++)
-		if (i < tiles.length - 1 && tiles[i] == tiles[i + 1] && (i == 0 || !(tiles[i] == tiles[i - 1]))) pairs_index.push(i);
-
-	for (let pair_num = 0; pair_num < pairs_index.length; pair_num++) {
-		let triplets_index = [];
-		let tiles_copy = tiles.copy();
-		tiles_copy.splice(pairs_index[pair_num], 2);
-
-		for (let i = 0; i < tiles_copy.length; i++)
-			if (i < tiles_copy.length - 2 && tiles_copy[i] == tiles_copy[i + 1] && tiles_copy[i] == tiles_copy[i + 2] && (i == 0 || !(tiles_copy[i] == tiles_copy[i - 1])))
-				triplets_index.push(i);
-
-		let triplets_num = triplets_index.length;
-		
-		if (triplets_num == (tiles.length - 2) / 3) return true;
-		
-		if (check_sequences(tiles_copy)) return true;
-		
-		if (triplets_num == 1) {
-			tiles_copy.splice(triplets_index[0], 3);
-			if (check_sequences(tiles_copy)) return true;
-		}
-
-		if (triplets_num == 2) {
-			for (let j = 0; j < 2; j++) {
-				let tiles_copy2 = tiles_copy.copy();
-				tiles_copy2.splice(triplets_index[j], 3);
-				if (check_sequences(tiles_copy2)) return true;
-			}
-			tiles_copy.splice(triplets_index[1], 3);
-			tiles_copy.splice(triplets_index[0], 3);
-			if (check_sequences(tiles_copy)) return true;
-		}
-
-		if (triplets_num == 3) {
-			for (let j = 0; j < 3; j++) {
-				let tiles_copy2 = tiles_copy.copy();
-				tiles_copy2.splice(triplets_index[j], 3);
-				if (check_sequences(tiles_copy2)) return true;
-			}
-			for (let j = 0; j < 3; j++) {
-				let tiles_copy2 = tiles_copy.copy();
-				let triplets_index_copy = triplets_index.copy();
-				triplets_index_copy.splice(j, 1);
-				tiles_copy2.splice(triplets_index[1], 3);
-				tiles_copy2.splice(triplets_index[0], 3);
-				if (check_sequences(tiles_copy2)) return true;
-			}
-			tiles_copy.splice(triplets_index[2], 3);
-			tiles_copy.splice(triplets_index[1], 3);
-			tiles_copy.splice(triplets_index[0], 3);
-			if (check_sequences(tiles_copy)) return true;
-		}
-	}
-	return false;
-};
-
-function check_sequences(tiles) {
-	let tiles_copy = tiles.copy();
-	for (let seq_num = 0; seq_num < parseInt(tiles.length / 3); seq_num++) {
-		let find = 1;
-		let seq = [tiles_copy[0]];
-		let seq_index = [0];
-
-		for (let i = 1; i < tiles_copy.length; i++) {
-			if (tiles_copy[i] == tiles_copy[0] + find) {
-				seq_index.push(i);
-				find++;
-			}
-			if (find >= 3) break;
-		}
-		if (seq_index.length == 3) {
-			tiles_copy.splice(seq_index[2], 1);
-			tiles_copy.splice(seq_index[1], 1);
-			tiles_copy.splice(0, 1)
-		} else return false;
-	}
-	return true;
-};
-
-
-
-
-
-let now_tiles_num = 0;
-let out_group_num = 0;
-
-let tile_region = 0; // 0 手牌，5 和牌，1234 副
-
-let hand_tiles = [];
-let hidden_tiles_num = [0];
-
-let hu = [];
-let hu_num = [0];
-
-let out_tiles = [[],[],[],[]];
-let out_tiles_now_num = [[0], [0], [0], [0]];
-
-let out_type_array = [0, 0, 0, 0]; // 0无 1顺 2刻 3明杠 4暗杠
+let out_type_array = [0, 0, 0, 0]; //副露类型 0无 1顺 2刻 3明杠 4暗杠
 
 
 function choose_tile(id){
@@ -248,7 +66,6 @@ function choose_tile(id){
 	let max;
 	let now;
 	let region;
-	//let out_type_region;
 
 	switch(tile_region){
 		case (0): {
@@ -270,7 +87,7 @@ function choose_tile(id){
 			max = 3;
 			now = out_tiles_now_num[tile_region - 1];
 			region = document.getElementById(`out_tiles${tile_region}`);
-			//out_type_region = document.getElementById(`out_type${tile_region}`)
+			
 		}
 	}
 
@@ -303,8 +120,7 @@ function choose_tile(id){
 		check_out_type_region();
 	}
 
-	if ((now_tiles_num == 13 && hu_num[0] == 0) || now_tiles_num == 14 )
-		print(check_situations(hand_tiles.copy()));
+	tiles_in_13_or_14();
 }
 
 function delete_tile(index, now_region){
@@ -352,6 +168,9 @@ function delete_tile(index, now_region){
 	region.innerHTML = content;
 	check_out_type_region();
 
+	document.getElementById("richi1").disabled = false;
+	document.getElementById("richi2").disabled = false;
+
 	if ((now_tiles_num == 13 && hu_num[0] == 0) || now_tiles_num == 14 )
 		print(check_situations(hand_tiles.copy()));
 	else
@@ -361,8 +180,12 @@ function delete_tile(index, now_region){
 function set_out_group_num(value){
 	value = parseInt(value);
 
-	if (value < out_group_num){
+	if (value < out_group_num)
 		document.getElementById(`tile${value}`).checked = true;
+
+	if (value != 0){
+		document.getElementById("fortune6").checked = false;
+		extra_states[5] = false;
 	}
 
 	out_group_num = value;
@@ -393,7 +216,7 @@ function set_out_group_num(value){
 	
 	out_tiles = [[],[],[],[]];
 	out_tiles_now_num = [[0], [0], [0], [0]];
-	now_tiles_num = hidden_tiles_num[0];
+	now_tiles_num = hidden_tiles_num[0] + hu_num[0];
 	out_type_array = [0, 0, 0, 0];
 }
 
@@ -477,6 +300,26 @@ function change_out_type(value, index){
 	value = parseInt(value);
 	index = parseInt(index);
 	out_type_array[index] = value;
+	tiles_in_13_or_14();
+}
+
+function tiles_in_13_or_14(){
+	document.getElementById("richi1").disabled = false;
+	document.getElementById("richi2").disabled = false;
+	document.getElementById("richi1_label").style.color = "black";
+	document.getElementById("richi2_label").style.color = "black";
+	if ((now_tiles_num == 13 && hu_num[0] == 0) || now_tiles_num == 14){
+		for (state of out_type_array)
+			if (state != 0 && state != 4){
+				set_richi(0);
+				document.getElementById("richi0").checked = true;
+				document.getElementById("richi1").disabled = true;
+				document.getElementById("richi2").disabled = true;
+				document.getElementById("richi1_label").style.color = "gray";
+				document.getElementById("richi2_label").style.color = "gray";
+			}
+		print(check_situations(hand_tiles.copy()));
+	}
 }
 
 
@@ -488,9 +331,7 @@ function print(str){
 }
 
 Array.prototype.copy = function(){
-	let a=[];
-	for (let i = 0; i < this.length; i++)
-		a.push(this[i]);
+	let a = this.concat();
 	return a;
 }
 
@@ -501,30 +342,39 @@ Array.prototype.sort_tiles = function(){
 //-------------//
 
 
-let richi_state = 0;
-let circle_wind = 41;
-let self_wind = 41;
+let richi_state = 0; // 0无 1立 2两立
+let circle_wind = 41; // 41东 43南 45西 47北
+let self_wind = 41; // 41东 43南 45西 47北
 let extra_states = [false, false, false, false, false, false] // false 无 true 有/ [0]自摸 [1]一发 [2]杠开 [3]抢杠 [4]海底/河底 [5]天/地和
+let chang_num = 0; // 本场数
+let dora_num = 0; // 宝牌数
+
 
 function set_richi(value){
 	value = parseInt(value);
 	richi_state = value;
+	tiles_in_13_or_14();
 }
 
 function set_circle_wind(value){
 	value = parseInt(value);
 	circle_wind = value;
+	show_user_state();
 }
 function set_self_wind(value){
 	value = parseInt(value);
 	self_wind = value;
+	show_user_state();
 }
 
 function set_extra_states(value){
 	value = parseInt(value);
 	extra_states[value] = !extra_states[value];
-	if (!extra_states[value] && value == 0 && extra_states[2]) //杠开被选中的时候不能取消自摸
-		extra_states[0] = true;
+	if (!extra_states[value])
+		if (value == 0){
+			extra_states[2] = false;
+			extra_states[5] = false;
+		}
 
 	if (extra_states[value]){
 		switch (value){
@@ -549,9 +399,12 @@ function set_extra_states(value){
 				break;
 			}
 			case 5: {
-				for(let i=0; i<5; i++){
+				extra_states[0] = true; //天地胡必是自摸
+				for(let i=1; i<5; i++){
 					extra_states[i] = false;
 				}
+				set_out_group_num(0);
+				document.getElementById('out_group0').selected = true;
 				break;
 			}
 		}
@@ -559,6 +412,49 @@ function set_extra_states(value){
 	if (value != 5) extra_states[5] = false;
 
 	for (let i=0; i<6; i++) document.getElementById(`fortune${i+1}`).checked = extra_states[i];
+
+	tiles_in_13_or_14();
+}
+
+function change_chang(value){
+	value = value.replace(/[^0-9]/g, "");
+	let element = document.getElementById("state1");
+	if (!value)
+		element.value = chang_num;
+	else {
+		element.value = value;
+		chang_num = parseInt(value);
+	}
+	show_user_state();
+}
+
+
+function change_dora(value){
+	value = value.replace(/[^0-9]/, "");
+	let element = document.getElementById("state1");
+	if (value == "" || value == null || value == undefined)
+		element.value = dora_num;
+	else {
+		element.value = value;
+		dora_num = parseInt(value);
+	}
+
+	show_user_state();
+}
+
+
+function show_user_state(){
+	let region = document.getElementById("user_state");
+	let content = "";
+	content += all_tiles_dic[circle_wind] + "圈 ";
+	content += chang_num + "本场 ";
+	content += all_tiles_dic[self_wind] + "位";
+	if (self_wind == 41)
+		content += " 庄家";
+	else
+		content += " 闲家";
+	region.innerHTML = content;
+	tiles_in_13_or_14();
 }
 
 
@@ -579,5 +475,576 @@ function clear_tiles(){
 	out_type_array = [0, 0, 0, 0];
 	print("");
 	document.getElementById(`tile${tile_region}`).checked = true;
+	show_user_state();
 }
 
+// let now_tiles_num = 0; //总牌数 不计杠
+// let out_group_num = 0; //副露数
+
+// let tile_region = 0; //输入区域 0 手牌，5 和牌，1234 副
+
+// let hand_tiles = []; //暗牌序列
+// let hidden_tiles_num = [0]; //hidden_tiles_num[0] 暗牌数
+
+// let hu = []; //和张
+// let hu_num = [0]; //hu_num[0] 和张数
+
+// let out_tiles = [[],[],[],[]]; //四个副露序列
+// let out_tiles_now_num = [[0], [0], [0], [0]]; //out_tiles_now_num[i][0] 副露数列中的牌数
+
+// let out_type_array = [0, 0, 0, 0]; //副露类型 0无 1顺 2刻 3明杠 4暗杠
+
+
+
+
+//------------------//
+
+
+// let richi_state = 0; // 0无 1立 2两立
+// let circle_wind = 41; // 41东 43南 45西 47北
+// let self_wind = 41; // 41东 43南 45西 47北
+// let extra_states = [false, false, false, false, false, false] // false 无 true 有/ [0]自摸 [1]一发 [2]杠开 [3]抢杠 [4]海底/河底 [5]天/地和
+// let chang_num = 0; // 本场数
+// let dora_num = 0; // 宝牌数
+
+
+let yiman_num = 0;
+let fan = 0;
+let menqing = true;
+
+function calculate_fan(tiles, last_tile){
+	if (now_tiles_num != 14)
+		return;
+
+	let content = "";
+
+	yiman_num = 0;
+	content += calculate_yiman(tiles, last_tile);
+
+	if (yiman_num != 0)
+		return content += calculate_yiman_point();
+	else
+		return "不是役满";
+}
+
+function calculate_yiman(tiles, last_tile){
+	menqing = true;
+	for (let i = 0; i < out_group_num; i++)
+		if (out_type_array[i] != 4 && out_type_array[i] != 0)
+			menqing = false;
+
+	let content = "";
+	let temp;
+	let tianhu = 0; //0无 1天
+
+	// 天地和
+	if (extra_states[5]){
+		yiman_num ++;
+		if (self_wind == 41){ //庄
+			tianhu = 1;
+			content += "天和 1倍役满<br>";
+		}
+		else content += "地和 1倍役满<br>";
+	}
+
+	// 国士
+	temp = yiman_guoshi(tiles, last_tile);
+
+	if(temp != 0){
+		if (temp == 2 || tianhu == 1){ //十三面或天胡
+			content += "国士无双十三面 2倍役满<br>";
+			yiman_num += 2;
+		}else{
+			content += "国士无双 1倍役满<br>";
+			yiman_num += 1;
+		}
+		return content;
+	}
+
+	//九莲
+	temp = yiman_jiulian(tiles, last_tile);
+	if(temp != 0){
+		if (temp == 2 || tianhu == 1){ //十三面或天胡
+			content += "纯正九莲宝灯 2倍役满<br>";
+			yiman_num += 2;
+		}else{
+			content += "九莲宝灯 1倍役满<br>";
+			yiman_num += 1;
+		}
+		return content;
+	}
+
+	//四杠
+	temp = yiman_sigang();
+	if(temp != 0){
+		content += "四杠子 1倍役满<br>";
+		yiman_num += 1;
+	}
+
+	//四暗刻
+	temp = yiman_4anke(last_tile);
+	if(temp != 0){
+		if (temp == 2 || tianhu == 1){ //十三面或天胡
+			content += "四暗刻单骑 2倍役满<br>";
+			yiman_num += 2;
+		}else{
+			content += "四暗刻 1倍役满<br>";
+			yiman_num += 1;
+		}
+	}
+
+	//绿一色
+	temp = yiman_green(tiles, last_tile);
+	if(temp != 0){
+		content += "绿一色 1倍役满<br>";
+		yiman_num += 1;
+		return content;
+	}
+
+	//清老头
+	temp = yiman_laotou(tiles, last_tile);
+	if(temp != 0){
+		content += "清老头 1倍役满<br>";
+		yiman_num += 1;
+		return content;
+	}
+
+	//字一色
+	temp = yiman_zi(tiles, last_tile);
+	if(temp != 0){
+		content += "字一色 1倍役满<br>";
+		yiman_num += 1;
+	}
+
+	//大三元
+	temp = yiman_3yuan(tiles, last_tile);
+	if(temp != 0){
+		content += "大三元 1倍役满<br>";
+		yiman_num += 1;
+		return content;
+	}
+
+	//四喜胡
+	temp = yiman_4xi(tiles, last_tile);
+	if(temp != 0){
+		if (temp == 2 || tianhu == 1){ //十三面或天胡
+			content += "大四喜 2倍役满<br>";
+			yiman_num += 2;
+		}else{
+			content += "小四喜 1倍役满<br>";
+			yiman_num += 1;
+		}
+		return content;
+	}
+
+	return content;
+}
+
+function yiman_guoshi(tiles, last_tile) {
+	if (out_group_num != 0)
+		return 0;
+
+	let all = tiles.copy();
+	all.push(last_tile);
+	all.sort_tiles();
+
+	let orphans = [11, 19, 21, 29, 31, 39, 41, 43, 45, 47, 51, 53, 55, 0];
+	for (let i = 0; i < 14; i++)
+		if (!(all[i] == orphans[i])){
+			if (i == 0)
+				return 0;
+			else if (!(all[i] == all[i - 1]))
+				return 0;
+			else{
+				all.splice(i, 1);
+				break;
+			}
+		}
+			
+	for (let i = 0; i < 13; i++)
+		if (!(all[i] == orphans[i])) return 0;
+
+	for (let i = 0; i < 13; i++)
+		if (!(tiles[i] == orphans[i])) return 1;
+
+	return 2;
+}
+
+function yiman_jiulian(tiles, last_tile){
+	if (out_group_num != 0)
+		return 0;
+
+	let all = tiles.copy();
+	all.push(last_tile);
+	all.sort_tiles();
+
+	let kind = Math.floor(all[13] / 10);
+
+	if (kind != 1 && kind != 2 && kind != 3)
+		return 0;
+
+	let seq = [1, 1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 9, 9, 9];
+	for (let i = 0; i < 14; i++){
+		if (Math.floor(all[i] / 10) != kind)
+			return 0;
+		if (!(all[i] == (kind * 10 + seq[i]))){
+			if (i == 0 || i == 1 || i == 2 || i == 13 || i == 12 || i == 11)
+				return 0;
+			else if (!(all[i] == all[i - 1]))
+				return 0;
+			else{
+				all.splice(i, 1);
+				break;
+			}
+		}
+	}
+
+	for (let i = 0; i < 13; i++)
+		if (!(all[i] == (kind * 10 + seq[i]))) return 0;
+
+	for (let i = 0; i < 13; i++)
+		if (!(tiles[i] == (kind * 10 + seq[i]))) return 1;
+	return 2;
+}
+
+function yiman_sigang(){
+	if (out_group_num != 4)
+		return 0;
+
+	for (let result of out_type_array)
+		if (result != 3 && result != 4)
+			return 0;
+	return 1;
+}
+
+function yiman_4anke(last_tile){
+	if (!menqing) return 0;
+
+	let hand_tiles_copy = hand_tiles.copy();
+
+	let triplets_index = [];
+	let triplets_num = out_group_num;
+	for (let i = 0; i < hand_tiles_copy.length; i++)
+		if (i < hand_tiles_copy.length - 2
+			&& hand_tiles_copy[i] == hand_tiles_copy[i + 1]
+			&& hand_tiles_copy[i] == hand_tiles_copy[i + 2]
+			&& (i == 0 || !(hand_tiles_copy[i] == hand_tiles_copy[i - 1])))
+			triplets_index.push(i);
+
+	triplets_num += triplets_index.length;
+
+	for(i = triplets_index.length - 1; i>=0; i--)
+		hand_tiles_copy.splice(triplets_index[i], 3);
+
+	if (hand_tiles_copy.length == 1 && hand_tiles_copy[0] == last_tile)
+		return 2;
+	if (hand_tiles_copy.length == 4 
+		&& triplets_num == 3 
+		&& hand_tiles_copy[0] == hand_tiles_copy[1]
+		&& hand_tiles_copy[2] == hand_tiles_copy[3]
+		&& (last_tile == hand_tiles_copy[0] || last_tile == hand_tiles_copy[2])
+		&& extra_states[0]) //自摸
+		return 1;
+
+	return 0;
+}
+
+function yiman_green(tiles, last_tile){
+	let all = tiles.copy();
+	all.push(last_tile);
+	for (let tile of all)
+		if (tile != 32
+			&& tile != 33
+			&& tile != 34
+			&& tile != 36
+			&& tile != 38
+			&& tile != 53)
+			return 0;
+	return 1;
+}
+
+function yiman_laotou(tiles, last_tile){
+	let all = tiles.copy();
+	all.push(last_tile);
+	for (let tile of all)
+		if (tile != 11
+			&& tile != 21
+			&& tile != 31
+			&& tile != 19
+			&& tile != 29
+			&& tile != 39)
+			return 0;
+	return 1;
+}
+
+function yiman_zi(tiles, last_tile){
+	let all = tiles.copy();
+	all.push(last_tile);
+	for (let tile of all)
+		if (Math.floor(tile/10) != 4 && Math.floor(tile/10) != 5)
+			return 0;
+	return 1;
+}
+
+function yiman_3yuan(tiles, last_tile){
+	let all = tiles.copy();
+	all.push(last_tile);
+	all.sort_tiles();
+	if (all[13] == 55 && all[12] == 55 && all[11] == 55
+		&& all[10] == 53 && all[9] == 53 && all[8] == 53
+		&& all[7] == 51 && all[6] == 51 && all[5] == 51)
+		return 1;
+	return 0;
+}
+
+function yiman_4xi(tiles, last_tile){
+	let all = tiles.copy();
+	all.push(last_tile);
+	let seq = [];
+	let four_xi = [41, 41, 41, 43, 43, 43, 45, 45, 45, 47, 47, 47];
+
+	for (let tile of all){
+		if (tile == 41
+			|| tile == 43
+			|| tile == 45
+			|| tile == 47)
+			seq.push(tile);
+	}
+
+	if (seq.length == 12){
+		for (let i = 0; i < 12; i++)
+			if (seq[i] != four_xi[i])
+				return 0;
+		return 2;
+	}
+	if (seq.length == 11) return 1;
+	else return 0;
+
+}
+
+
+function calculate_yiman_point(){
+	if (yiman_num == 0)
+		return;
+	let content = `共计${yiman_num}倍役满<br>`;
+	let a = 8000;
+	a = yiman_num * a;
+	let total;
+	let xian_point;
+	let zhuang_point;
+
+	if (self_wind == 41){
+		total = 6 * a + 300 * chang_num;
+		if(extra_states[0]){
+			xian_point = 2 * a + 100 * chang_num;
+			content += `庄家自摸获${total}点 每家付${xian_point}点`;
+		}
+		else{
+			xian_point = 6 * a + 300 * chang_num;
+			content += `庄家荣胡获${total}点 放铳者付${xian_point}点`;
+		}
+	}
+	else {
+		total = 4 * a + 300 * chang_num;
+		if(extra_states[0]){
+			xian_point = 1 * a + 100 * chang_num;
+			zhuang_point = 2 * a + 100 * chang_num;
+			content += `闲家自摸获${total}点 庄家付${zhuang_point}点 闲家付${xian_point}点`;
+		}
+		else{
+			xian_point = 4 * a + 300 * chang_num;
+			content += `闲家荣胡获${total}点 放铳者付${xian_point}点`;
+		}
+	}
+	return content;
+}
+
+//---------------------------------------//
+
+function check_situations(tiles) {
+	tiles.sort_tiles();
+
+	for (let i = 0; i < out_group_num; i ++)
+		if (out_tiles_now_num[i][0] != 3)
+			return "";
+
+	if (now_tiles_num == 13) return check_ting(tiles);
+
+	if (now_tiles_num == 14){
+		tiles.push(hu[0]);
+		if (check_hu(tiles) == 0)
+			return "没和";
+		let all = hand_tiles.copy();
+		for(let i = 0; i < out_group_num; i++)
+			all = all.concat(out_tiles[i]);	
+		all.sort_tiles();
+		return calculate_fan(all, hu[0]);		
+	}
+
+
+	return "有问题，看见了请联系作者";
+};
+
+function check_ting(tiles) {
+	for(let i = 0; i < out_group_num; i ++)
+		if (((out_tiles)[i][0] != (out_tiles)[i][1] || (out_tiles)[i][0] != (out_tiles)[i][2])
+				&& ((out_tiles)[i][0]+1 != (out_tiles)[i][1] || (out_tiles)[i][0]+2 != (out_tiles)[i][2]))
+			return "没听";
+
+	if (now_tiles_num == 13 && tiles.length % 3 != 1)
+		return "没听";
+
+	if (tiles.length == 1)
+		return "听：" + all_tiles_dic[tiles[0]] + " ";
+
+	let tings = [];
+	for (let tile of all_tiles) {
+		let tiles_copy = tiles.copy();
+		tiles_copy.push(tile);
+		tiles_copy.sort_tiles();
+
+		if (!(check_hu(tiles_copy) == 0)) tings.push(tile);
+	}
+	if (tings == undefined || tings.length == 0){
+		return "没听";
+	}
+	else {
+		let content = "听：";
+		for (let ting of tings){
+			content += all_tiles_dic[ting] + " ";
+		}
+		return content;
+	}
+};
+
+function check_hu(tiles) {
+	for(let i = 0; i < out_group_num; i ++)
+		if (((out_tiles)[i][0] != (out_tiles)[i][1] || (out_tiles)[i][0] != (out_tiles)[i][2])
+				&& ((out_tiles)[i][0]+1 != (out_tiles)[i][1] || (out_tiles)[i][0]+2 != (out_tiles)[i][2]))
+			return 0;
+
+	tiles.sort_tiles();
+	if (check_seven_pairs(tiles)) return 1;
+	else if (check_thirteen_yao(tiles)) return 1;
+	else if (check_chichen_hu(tiles)) return 1;
+	return 0;
+};
+
+function check_seven_pairs(tiles) {
+	if (out_group_num != 0)
+		return false;
+
+	for (let i = 0; i < tiles.length; i += 2)
+		if (!(tiles[i] == tiles[i + 1])) return false;
+	return true;
+};
+
+function check_thirteen_yao(tiles) {
+	if (out_group_num != 0)
+		return false;
+
+	let tiles_copy = tiles.copy();
+	let orphans = [11, 19, 21, 29, 31, 39, 41, 43, 45, 47, 51, 53, 55, 0];
+	for (let i = 0; i < tiles_copy.length; i++)
+		if (!(tiles_copy[i] == orphans[i]))
+			if (i == 0)
+				return false;
+			else if (!(tiles_copy[i] == tiles_copy[i - 1]))
+				return false;
+			else{
+				tiles_copy.splice(i, 1);
+				break;
+			}
+	for (let i = 0; i < tiles_copy.length; i++)
+		if (!(tiles_copy[i] == orphans[i])) return false;
+	return true;
+};
+
+function check_chichen_hu(tiles) {
+	let pairs_index = [];
+
+	if (tiles.length == 2)
+		if (tiles[0] == tiles[1])
+			return true;
+		else
+			return false;
+
+	for (let i = 0; i < tiles.length; i++)
+		if (i < tiles.length - 1 && tiles[i] == tiles[i + 1] && (i == 0 || !(tiles[i] == tiles[i - 1]))) pairs_index.push(i);
+
+	for (let pair_num = 0; pair_num < pairs_index.length; pair_num++) {
+		let triplets_index = [];
+		let tiles_copy = tiles.copy();
+		tiles_copy.splice(pairs_index[pair_num], 2);
+
+		for (let i = 0; i < tiles_copy.length; i++)
+			if (i < tiles_copy.length - 2 && tiles_copy[i] == tiles_copy[i + 1] && tiles_copy[i] == tiles_copy[i + 2] && (i == 0 || !(tiles_copy[i] == tiles_copy[i - 1])))
+				triplets_index.push(i);
+
+		let triplets_num = triplets_index.length;
+		
+		if (triplets_num == (tiles.length - 2) / 3) return true;
+		
+		if (check_sequences(tiles_copy)) return true;
+		
+		if (triplets_num == 1) {
+			tiles_copy.splice(triplets_index[0], 3);
+			if (check_sequences(tiles_copy)) return true;
+		}
+
+		if (triplets_num == 2) {
+			for (let j = 0; j < 2; j++) {
+				let tiles_copy2 = tiles_copy.copy();
+				tiles_copy2.splice(triplets_index[j], 3);
+				if (check_sequences(tiles_copy2)) return true;
+			}
+			tiles_copy.splice(triplets_index[1], 3);
+			tiles_copy.splice(triplets_index[0], 3);
+			if (check_sequences(tiles_copy)) return true;
+		}
+
+		if (triplets_num == 3) {
+			for (let j = 0; j < 3; j++) {
+				let tiles_copy2 = tiles_copy.copy();
+				tiles_copy2.splice(triplets_index[j], 3);
+				if (check_sequences(tiles_copy2)) return true;
+			}
+			for (let j = 0; j < 3; j++) {
+				let tiles_copy2 = tiles_copy.copy();
+				let triplets_index_copy = triplets_index.copy();
+				triplets_index_copy.splice(j, 1);
+				tiles_copy2.splice(triplets_index[1], 3);
+				tiles_copy2.splice(triplets_index[0], 3);
+				if (check_sequences(tiles_copy2)) return true;
+			}
+			tiles_copy.splice(triplets_index[2], 3);
+			tiles_copy.splice(triplets_index[1], 3);
+			tiles_copy.splice(triplets_index[0], 3);
+			if (check_sequences(tiles_copy)) return true;
+		}
+	}
+	return false;
+};
+
+function check_sequences(tiles) {
+	let tiles_copy = tiles.copy();
+	for (let seq_num = 0; seq_num < parseInt(tiles.length / 3); seq_num++) {
+		let find = 1;
+		let seq = [tiles_copy[0]];
+		let seq_index = [0];
+
+		for (let i = 1; i < tiles_copy.length; i++) {
+			if (tiles_copy[i] == tiles_copy[0] + find) {
+				seq_index.push(i);
+				find++;
+			}
+			if (find >= 3) break;
+		}
+		if (seq_index.length == 3) {
+			tiles_copy.splice(seq_index[2], 1);
+			tiles_copy.splice(seq_index[1], 1);
+			tiles_copy.splice(0, 1)
+		} else return false;
+	}
+	return true;
+};

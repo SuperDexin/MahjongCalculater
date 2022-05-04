@@ -104,7 +104,7 @@
 			width: 100%;
 			display: flex;
 			justify-content: space-between;
-			margin: 1rem auto;
+			margin: 0.5rem auto;
 		}
 		#tiles button {
 			width: 2rem;
@@ -142,18 +142,17 @@
 				</div>
 			</div>
 
-			<br>
 			<div>输入：<div id="tiles"></div></div>
-			<br>
+
 			<div class="choises">选项：
 				<div style="margin-left: 2rem;">
 					<p>
 						<input type="radio" value=0 name="richi" onchange="set_richi(this.value)" id="richi0" checked="true">
 						<label for="richi0">无立</label>
 						<input type="radio" value=1 name="richi" onchange="set_richi(this.value)" id="richi1">
-						<label for="richi1">立直</label>
+						<label id="richi1_label" for="richi1">立直</label>
 						<input type="radio" value=2 name="richi" onchange="set_richi(this.value)" id="richi2">
-						<label for="richi2">两立</label>
+						<label id="richi2_label" for="richi2">两立</label>
 					</p>
 					<p>
 						<input type="checkbox" name="fortune" id="fortune1" value="0" onchange="set_extra_states(this.value)">
@@ -185,19 +184,21 @@
 						</select>
 					</p>
 					<p>
-						<input type="textarea" name="state" id="state1" style="width:1.5em"><label for="state1">本场</label>
-						<input type="textarea" name="state" id="state2" style="width:1.5em; margin-left: 1rem"><label for="state2">宝牌</label>
+						<input type="textarea" name="state" id="state1" style="width:1.5em" onchange="change_chang(this.value)" value=0>
+						<label for="state1">本场</label>
+						<input type="textarea" name="state" id="state2" style="width:1.5em; margin-left: 1rem" onchange="change_dora(this.value)" value=0>
+						<label for="state2">宝牌</label>
 						<select onchange="set_out_group_num(this.value)">
-							<option value=0 selected="true">0</option>
-							<option value=1>1</option>
-							<option value=2>2</option>
-							<option value=3>3</option>
-							<option value=4>4</option>
+							<option id="out_group0" value=0 selected="true">0</option>
+							<option id="out_group1" value=1>1</option>
+							<option id="out_group2" value=2>2</option>
+							<option id="out_group3" value=3>3</option>
+							<option id="out_group4" value=4>4</option>
 						</select>副露
 					</p>
 				</div>
 			</div>
-			<br>
+			<div><p>状态：<span id="user_state"></span></p></div>
 			<div>结果：<br><div id="answer"></div></div>
 		</div>
 	</div>
@@ -214,14 +215,16 @@
 			content += `<button id="${31+i}" onclick="choose_tile(this.id)">${number[i]}条</button>`;
 		content += "</div><div>"
 		content += `<button id="${41}" onclick="choose_tile(this.id)">东风</button>`;
-		content += `<button id="${43}" onclick="choose_tile(this.id)">西风</button>`;
-		content += `<button id="${45}" onclick="choose_tile(this.id)">南风</button>`;
+		content += `<button id="${43}" onclick="choose_tile(this.id)">南风</button>`;
+		content += `<button id="${45}" onclick="choose_tile(this.id)">西风</button>`;
 		content += `<button id="${47}" onclick="choose_tile(this.id)">北风</button>`;
 		content += `<button id="${51}" onclick="choose_tile(this.id)">红中</button>`;
 		content += `<button id="${53}" onclick="choose_tile(this.id)">发财</button>`;
 		content += `<button id="${55}" onclick="choose_tile(this.id)">白板</button>`;
 		content += "</div>"
 		document.getElementById("tiles").innerHTML = content;
+
+		show_user_state();
 	</script>
 </body>
 </html>
