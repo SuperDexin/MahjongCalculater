@@ -239,6 +239,8 @@ let hu_num = [0];
 let out_tiles = [[],[],[],[]];
 let out_tiles_now_num = [[0], [0], [0], [0]];
 
+let out_type_array = [0, 0, 0, 0]; // 0无 1顺 2刻 3明杠 4暗杠
+
 
 function choose_tile(id){
 	id = parseInt(id);
@@ -246,6 +248,7 @@ function choose_tile(id){
 	let max;
 	let now;
 	let region;
+	//let out_type_region;
 
 	switch(tile_region){
 		case (0): {
@@ -267,6 +270,7 @@ function choose_tile(id){
 			max = 3;
 			now = out_tiles_now_num[tile_region - 1];
 			region = document.getElementById(`out_tiles${tile_region}`);
+			//out_type_region = document.getElementById(`out_type${tile_region}`)
 		}
 	}
 
@@ -274,8 +278,11 @@ function choose_tile(id){
 
 		let same_tiles_num = 0;
 		let all = hand_tiles.concat(hu);
-		for(let tile of out_tiles)
-			all = all.concat(tile);
+		for(let i = 0; i < out_group_num; i++){
+			all = all.concat(out_tiles[i]);	
+			if(out_type_array[i] == 3 || out_type_array[i] == 4)
+				all.push(out_tiles[i][0]);
+		}
 		all.sort_tiles();
 		for(tile of all)
 			if (tile == id) same_tiles_num++;
@@ -292,6 +299,8 @@ function choose_tile(id){
 		}
 
 		region.innerHTML = content;
+
+		check_out_type_region();
 	}
 
 	if ((now_tiles_num == 13 && hu_num[0] == 0) || now_tiles_num == 14 )
@@ -341,6 +350,7 @@ function delete_tile(index, now_region){
 	}
 
 	region.innerHTML = content;
+	check_out_type_region();
 
 	if ((now_tiles_num == 13 && hu_num[0] == 0) || now_tiles_num == 14 )
 		print(check_situations(hand_tiles.copy()));
@@ -348,23 +358,7 @@ function delete_tile(index, now_region){
 		print("");
 }
 
-function clear_tiles(){
-	document.getElementById("hands").innerHTML = "";
-	document.getElementById("winner").innerHTML = "";
-	show_tiles(out_group_num);
-	now_tiles_num = 0;
-	hand_tiles = [];
-	hidden_tiles_num = [0];
-	hu = [];
-	hu_num = [0];
-	out_tiles = [[],[],[],[]];
-	out_tiles_now_num = [[0], [0], [0], [0]];
-	print("");
-	document.getElementById(`tile${tile_region}`).checked = true;
-}
-
-
-function show_tiles(value){
+function set_out_group_num(value){
 	value = parseInt(value);
 
 	if (value < out_group_num){
@@ -387,8 +381,9 @@ function show_tiles(value){
 	for (let i = 1; i <= out_group_num; i++){
 		content += "<div>";
 		content += `<label for="tile${i}">副露${i}</label><br>`;
-		content += `<label for="tile${i}"><div id="out_tiles${i}" class="out_tiles"></div></label><br>`;
+		content += `<label for="tile${i}"><div id="out_tiles${i}" class="out_tiles"></div></label>`;
 		content += `<input type="radio" name="hand_tiles" value=${i} onchange="change_region(this.value)" id="tile${i}" style="margin: 0;">`;
+		content += `<div id="out_type${i}"></div>`
 		content += "</div>";
 	}
 	region.innerHTML = content;
@@ -399,11 +394,94 @@ function show_tiles(value){
 	out_tiles = [[],[],[],[]];
 	out_tiles_now_num = [[0], [0], [0], [0]];
 	now_tiles_num = hidden_tiles_num[0];
+	out_type_array = [0, 0, 0, 0];
 }
 
 function change_region(value){
 	tile_region = parseInt(value);
 }
+
+function check_out_type_region(){
+	let temp = 0; // 0无 1顺 2只能明刻 3可以杠
+
+	for (let i = 0; i < out_group_num; i++){
+
+		if (out_tiles_now_num[i][0] != 3){
+			temp = 0;
+			out_type_array[i] = 0;
+		}
+		else if (out_tiles[i][0]+1 == out_tiles[i][1] && out_tiles[i][1]+1 == out_tiles[i][2])
+			temp = 1;
+		else if (out_tiles[i][0] == out_tiles[i][1] && out_tiles[i][1] == out_tiles[i][2]){
+
+			let same_tiles_num = 0;
+			let all = hand_tiles.concat(hu);
+			for(let tile of out_tiles)
+				all = all.concat(tile);
+			all.sort_tiles();
+			for(tile of all)
+				if (tile == out_tiles[i][0]) same_tiles_num++;
+			if (same_tiles_num >= 4){
+				temp = 2; //只能明刻
+			}
+			else temp = 3; //可以杠
+		}
+		else temp = 0;
+
+		let out_type_region;
+		out_type_region = document.getElementById(`out_type${i+1}`);
+
+		switch (temp){
+			case 0:{
+				out_type_region.innerHTML = "";
+				out_type_array[i] = 0;
+				break;
+			}
+			case 1:{
+				out_type_region.innerHTML = "<input type='radio' checked='true'>明顺";
+				out_type_array[i] = 1;
+				break;
+			}
+			case 2:{
+				out_type_region.innerHTML = "<input type='radio' checked='true'>明刻";
+				out_type_array[i] = 2;
+				break;
+			}
+			case 3:{
+				switch (out_type_array[i]){
+					case 0:
+					case 1:
+					case 2:{
+						let content = "";
+						content += `<input type='radio' id="out_type${i+1}0" name="out_type${i+1}"`;
+						content += `value=2 checked='true' onchange="change_out_type(this.value, ${i})">`;
+						content += `<label for="out_type${i+1}0">明刻</label><br>`;
+						content += `<input type='radio' id="out_type${i+1}1" name="out_type${i+1}"`;
+						content += `value=3 onchange="change_out_type(this.value, ${i})">`;
+						content += `<label for="out_type${i+1}1">明杠</label><br>`;
+						content += `<input type='radio' id="out_type${i+1}2" name="out_type${i+1}"`;
+						content += `value=4 onchange="change_out_type(this.value, ${i})">`;
+						content += `<label for="out_type${i+1}2">暗杠</label>`;
+						out_type_region.innerHTML = content;
+						out_type_array[i] = 2;
+						break;
+					}
+				}
+			}
+		}
+	}
+
+}
+
+function change_out_type(value, index){
+	value = parseInt(value);
+	index = parseInt(index);
+	out_type_array[index] = value;
+}
+
+
+
+//-------------//
 
 function print(str){
 	document.getElementById("answer").innerHTML = str;
@@ -419,3 +497,87 @@ Array.prototype.copy = function(){
 Array.prototype.sort_tiles = function(){
 	this.sort(function(a,b){return a-b});
 }
+
+//-------------//
+
+
+let richi_state = 0;
+let circle_wind = 41;
+let self_wind = 41;
+let extra_states = [false, false, false, false, false, false] // false 无 true 有/ [0]自摸 [1]一发 [2]杠开 [3]抢杠 [4]海底/河底 [5]天/地和
+
+function set_richi(value){
+	value = parseInt(value);
+	richi_state = value;
+}
+
+function set_circle_wind(value){
+	value = parseInt(value);
+	circle_wind = value;
+}
+function set_self_wind(value){
+	value = parseInt(value);
+	self_wind = value;
+}
+
+function set_extra_states(value){
+	value = parseInt(value);
+	extra_states[value] = !extra_states[value];
+	if (!extra_states[value] && value == 0 && extra_states[2]) //杠开被选中的时候不能取消自摸
+		extra_states[0] = true;
+
+	if (extra_states[value]){
+		switch (value){
+			case 0: extra_states[3] = false; break; // 自摸必不抢杠
+			case 1: extra_states[2] = false; break; // 一发必不岭上
+			case 2: {
+				extra_states[0] = true;  // 岭上必定自摸
+				extra_states[1] = false; // 岭上必不一发
+				extra_states[3] = false; // 岭上必不抢杠
+				extra_states[4] = false; // 岭上必不海底
+				break; 
+			}
+			case 3: {
+				extra_states[0] = false; // 枪杠必不自摸
+				extra_states[2] = false; // 枪杠必不杠开
+				extra_states[4] = false; // 枪杠必不海底
+				break; 
+			}
+			case 4: {
+				extra_states[2] = false; // 海底必不杠开
+				extra_states[3] = false; // 海底必不抢杠
+				break;
+			}
+			case 5: {
+				for(let i=0; i<5; i++){
+					extra_states[i] = false;
+				}
+				break;
+			}
+		}
+	}
+	if (value != 5) extra_states[5] = false;
+
+	for (let i=0; i<6; i++) document.getElementById(`fortune${i+1}`).checked = extra_states[i];
+}
+
+
+//----------//
+
+
+function clear_tiles(){
+	document.getElementById("hands").innerHTML = "";
+	document.getElementById("winner").innerHTML = "";
+	set_out_group_num(out_group_num);
+	now_tiles_num = 0;
+	hand_tiles = [];
+	hidden_tiles_num = [0];
+	hu = [];
+	hu_num = [0];
+	out_tiles = [[],[],[],[]];
+	out_tiles_now_num = [[0], [0], [0], [0]];
+	out_type_array = [0, 0, 0, 0];
+	print("");
+	document.getElementById(`tile${tile_region}`).checked = true;
+}
+
