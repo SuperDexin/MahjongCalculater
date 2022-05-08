@@ -170,6 +170,10 @@ function delete_tile(index, now_region){
 
 	document.getElementById("richi1").disabled = false;
 	document.getElementById("richi2").disabled = false;
+	document.getElementById("richi1_label").style.color = "black";
+	document.getElementById("richi2_label").style.color = "black";
+	document.getElementById("gangkai").style.color = "black";
+	document.getElementById("fortune3").disabled = false;
 
 	if ((now_tiles_num == 13 && hu_num[0] == 0) || now_tiles_num == 14 )
 		print(check_situations(hand_tiles.copy()));
@@ -308,16 +312,36 @@ function tiles_in_13_or_14(){
 	document.getElementById("richi2").disabled = false;
 	document.getElementById("richi1_label").style.color = "black";
 	document.getElementById("richi2_label").style.color = "black";
+
+	let gang = false;
+
 	if ((now_tiles_num == 13 && hu_num[0] == 0) || now_tiles_num == 14){
-		for (state of out_type_array)
+		for (state of out_type_array){
 			if (state != 0 && state != 4){
-				set_richi(0);
+				richi_state = 0;
 				document.getElementById("richi0").checked = true;
 				document.getElementById("richi1").disabled = true;
 				document.getElementById("richi2").disabled = true;
 				document.getElementById("richi1_label").style.color = "gray";
 				document.getElementById("richi2_label").style.color = "gray";
+
+				let yifa = document.getElementById("fortune2");
+				let yifa_label = document.getElementById("yifa");
+				yifa.checked = false;
+				yifa.disabled = true;
+				yifa_label.style.color = "gray";
+				extra_states[1] = false;
 			}
+			if (state == 3 || state == 4) gang = true;
+		}
+			
+
+		if (!gang) {
+			document.getElementById("fortune3").selected = false;
+			document.getElementById("gangkai").style.color = "gray";
+			document.getElementById("fortune3").disabled = true;
+			extra_states[2] = false;
+		}
 		print(check_situations(hand_tiles.copy()));
 	}
 }
@@ -353,6 +377,18 @@ let dora_num = 0; // 宝牌数
 function set_richi(value){
 	value = parseInt(value);
 	richi_state = value;
+	let yifa = document.getElementById("fortune2");
+	let yifa_label = document.getElementById("yifa");
+	if (richi_state != 0){
+		yifa.disabled = false;
+		yifa_label.style.color = "black";
+	}
+	else {
+		yifa.checked = false;
+		yifa.disabled = true;
+		yifa_label.style.color = "gray";
+		extra_states[1] = false;
+	}
 	tiles_in_13_or_14();
 }
 
@@ -516,6 +552,11 @@ function calculate_fan(tiles, last_tile){
 	if (now_tiles_num != 14)
 		return;
 
+	menqing = true;
+	for (let i = 0; i < out_group_num; i++)
+		if (out_type_array[i] != 4 && out_type_array[i] != 0)
+			menqing = false;
+
 	let content = "";
 
 	yiman_num = 0;
@@ -524,15 +565,10 @@ function calculate_fan(tiles, last_tile){
 	if (yiman_num != 0)
 		return content += calculate_yiman_point();
 	else
-		return "不是役满";
+		return content += calculate_not_yiman(tiles, last_tile);
 }
 
 function calculate_yiman(tiles, last_tile){
-	menqing = true;
-	for (let i = 0; i < out_group_num; i++)
-		if (out_type_array[i] != 4 && out_type_array[i] != 0)
-			menqing = false;
-
 	let content = "";
 	let temp;
 	let tianhu = 0; //0无 1天
@@ -604,7 +640,7 @@ function calculate_yiman(tiles, last_tile){
 	//清老头
 	temp = yiman_laotou(tiles, last_tile);
 	if(temp != 0){
-		content += "清老头 1倍役满<br>";
+		content += "清幺九 1倍役满<br>";
 		yiman_num += 1;
 		return content;
 	}
@@ -724,9 +760,8 @@ function yiman_4anke(last_tile){
 
 	let triplets_index = [];
 	let triplets_num = out_group_num;
-	for (let i = 0; i < hand_tiles_copy.length; i++)
-		if (i < hand_tiles_copy.length - 2
-			&& hand_tiles_copy[i] == hand_tiles_copy[i + 1]
+	for (let i = 0; i < hand_tiles_copy.length - 2; i++)
+		if (hand_tiles_copy[i] == hand_tiles_copy[i + 1]
 			&& hand_tiles_copy[i] == hand_tiles_copy[i + 2]
 			&& (i == 0 || !(hand_tiles_copy[i] == hand_tiles_copy[i - 1])))
 			triplets_index.push(i);
@@ -861,6 +896,867 @@ function calculate_yiman_point(){
 
 //---------------------------------------//
 
+let fan_not_menqing = 
+				[false, false, true,  true,  true,  true,  true,  true,  true,  true,  true,  false, true,  false, true,  true,  true,  true ];
+let fan_shixia =
+				[false, false, true,  true,  false, false, false, false, false, false, false, false, true,  false, true,  true,  true,  false];
+
+let fan_map =[  [false, false, true,  true,  true,  false, false, false, false, false, true,  false, false, false, false, false, false, false], 
+				[false, false, true,  true,  true,  false, false, false, false, false, false, true,  false, false, false, true,  true,  false], 
+				[true,  true,  false, false, true,  true,  true,  true,  false, false, false, true,  true,  true,  false, true,  false, false], 
+				[true,  true,  false, false, false, true,  true,  true,  false, true,  true,  true,  true,  true,  false, false, true,  true ], 
+				[true,  true,  true,  false, false, true,  true,  true,  true,  false, false, true,  false, true,  true,  false, false, false], 
+				[false, false, true,  true,  true,  false, true,  true,  true,  true,  true,  false, false, false, false, false, false, true ], 
+				[false, false, true,  true,  true,  true,  false, true,  true,  true,  true,  false, false, false, false, true,  true,  true ], 
+				[false, false, true,  true,  true,  true,  true,  false, true,  true,  true,  false, false, false, false, true,  true,  true ], 
+				[false, false, false, false, true,  true,  true,  true,  false, false, true,  false, false, false, false, true,  true,  true ], 
+				[false, false, false, true,  false, true,  true,  true,  false, false, true,  false, false, false, false, false, true,  true ], 
+				[true,  false, false, true,  false, true,  true,  true,  true,  true,  false, false, false, false, false, false, false, true ], 
+				[false, true,  true,  true,  true,  false, false, false, false, false, false, false, true,  true,  true,  true,  true,  false], 
+				[false, false, true,  true,  false, false, false, false, false, false, false, true,  false, true,  false, false, false, true ], 
+				[false, false, true,  true,  true,  false, false, false, false, false, false, true,  true,  false, true,  false, true,  true ], 
+				[false, false, false, false, true,  false, false, false, false, false, false, true,  false, true,  false, true,  true,  true ], 
+				[false, true,  true,  false, false, false, true,  true,  true,  false, false, true,  false, false, true,  false, false, false], 
+				[false, true,  false, true,  false, false, true,  true,  true,  true,  false, true,  false, true,  true,  false, false, true ], 
+				[false, false, false, true,  false, true,  true,  true,  true,  true,  true,  false, true,  true,  true,  false, true,  false] ];
+
+let fan_name_dic = {
+	0	:	"七对",
+	1	:	"二杯口",
+	2	:	"清一色",
+	3	:	"混一色",
+	4	:	"断幺",
+	5	:	"对对和",
+	6	:	"三杠",
+	7	:	"三暗刻",
+	8	:	"三同刻",
+	9	:	"小三元",
+	10	:	"混幺",
+	11	:	"平和",
+	12	:	"一气通贯",
+	13	:	"一杯口",
+	14	:	"三色同顺",
+	15	:	"纯全带幺",
+	16	:	"混全带幺",
+	17	:	"役牌"
+}
+
+let fan_score_array = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+let fan_num = 0;
+let fan_array = [];
+
+
+let fan_dic = {};
+
+function add_fan(index, num){
+	fan_array.push(index);
+	fan_score_array[index] = num;
+	fan_num += num;
+	return true;
+}
+
+fan_dic[0] = function fan_qidui (tiles, last_tile){
+	if (!menqing) return false;
+	let index = 0;
+	let score = 2;
+
+	let all = tiles.copy();
+	all.push(last_tile);
+	all.sort_tiles();
+
+	if (check_seven_pairs(all))
+		return add_fan(index, score);
+
+	return false;
+};
+
+fan_dic[1] = function fan_erbei (tiles, last_tile){
+	if (!menqing) return false;
+	let index = 1;
+	let score = 3;
+
+	let all = tiles.copy();
+	all.push(last_tile);
+	all.sort_tiles();
+
+	for (let i = 0; i < 14; i += 2)
+		if (!(all[i] == all[i + 1])) return false;
+
+	if (check_chichen_hu(all))
+		return add_fan(index, score);
+
+	return false;
+
+};
+
+fan_dic[2] = function fan_qing1se (tiles, last_tile){
+	let index = 2;
+	let score = menqing ? 6 : 5;
+
+	let all = tiles.copy();
+	all.push(last_tile);
+	all.sort_tiles();
+
+	let kind = Math.floor(all[13] / 10);
+
+	if (kind != 1 && kind != 2 && kind != 3)
+		return false;
+
+	for (tile in all)
+		if (Math.floor(tile / 10) != kind) return false;
+
+	return add_fan(index, score);
+};
+
+fan_dic[3] = function fan_hun1se (tiles, last_tile){
+	let index = 3;
+	let score = menqing ? 3 : 2;
+
+	let all = tiles.copy();
+	all.push(last_tile);
+	all.sort_tiles();
+
+	let kind = Math.floor(all[1] / 10);
+	if (kind != 1 && kind != 2 && kind != 3)
+		return false;
+
+	for (tile in all){
+		let a = Math.floor(tile / 10);
+		if (a != kind
+			&& a != 4
+			&& a != 5) return false;
+	}
+
+	return add_fan(index, score);
+};
+
+fan_dic[4] = function fan_duanyao (tiles, last_tile){
+	let index = 4;
+	let score = 1;
+
+	let all = tiles.copy();
+	all.push(last_tile);
+	all.sort_tiles();
+
+	for (tile in all){
+		let a = (tile % 10);
+		if (a == 1 || a == 9)
+			return false;
+		a = Math.floor(tile / 10);
+		if (a == 4 || a == 5) return false;
+	}
+
+	return add_fan(index, score);
+};
+
+fan_dic[5] = function fan_duiduihu (tiles, last_tile){
+	let index = 5;
+	let score = 2;
+
+	for (let i = 0; i < out_group_num; i++)
+		if (out_type_array[i] != 2
+			&& out_type_array[i] != 3
+			&& out_type_array[i] != 4)
+			return false;
+
+	let triplets_index = [];
+	let triplets_num = out_group_num;
+	let hand_tiles_copy = hand_tiles.copy();
+	hand_tiles_copy.push(last_tile);
+	hand_tiles_copy.sort_tiles();
+
+	for (let i = 0; i < hand_tiles_copy.length - 2; i++)
+		if (hand_tiles_copy[i] == hand_tiles_copy[i + 1]
+			&& hand_tiles_copy[i] == hand_tiles_copy[i + 2]
+			&& (i == 0 || !(hand_tiles_copy[i] == hand_tiles_copy[i - 1])))
+			triplets_index.push(i);
+
+	triplets_num += triplets_index.length;
+
+	for(i = triplets_index.length - 1; i>=0; i--)
+		hand_tiles_copy.splice(triplets_index[i], 3);
+
+	if (hand_tiles_copy.length != 2 || hand_tiles_copy[0] != hand_tiles_copy[1])
+		return false;
+	return add_fan(index, score);
+};
+
+
+fan_dic[6] = function fan_3gang (tiles, last_tile){
+	let index = 6;
+	let score = 2;
+	let gang = 0;
+
+	for (let i = 0; i < out_group_num; i++)
+		if (out_type_array[i] == 3 || out_type_array[i] == 4)
+			gang ++;
+
+	if (gang != 3) return false;
+	return add_fan(index, score);
+};
+
+fan_dic[7] = function fan_3anke (tiles, last_tile){
+	let index = 7;
+	let score = 2;
+
+	let triplets_num = 0;
+	for (let i = 0; i < out_group_num; i++)
+		if (out_type_array[i] == 4)
+			triplets_num ++;
+
+	let hand_tiles_copy = hand_tiles.copy();
+
+	let triplets_index = [];
+	for (let i = 0; i < hand_tiles_copy.length - 2; i++)
+		if (hand_tiles_copy[i] == hand_tiles_copy[i + 1]
+			&& hand_tiles_copy[i] == hand_tiles_copy[i + 2]
+			&& (i == 0 || !(hand_tiles_copy[i] == hand_tiles_copy[i - 1])))
+			triplets_index.push(i);
+
+	triplets_num += triplets_index.length;
+
+	for(i = triplets_index.length - 1; i>=0; i--)
+		hand_tiles_copy.splice(triplets_index[i], 3);
+
+	hand_tiles_copy.push(last_tile);
+	if (triplets_num == 2 && extra_states[0]){
+		for (let i = 0; i < hand_tiles_copy.length - 2; i++)
+			if (hand_tiles_copy[i] == hand_tiles_copy[i + 1]
+				&& hand_tiles_copy[i] == hand_tiles_copy[i + 2]
+				&& (i == 0 || !(hand_tiles_copy[i] == hand_tiles_copy[i - 1]))) {
+				hand_tiles_copy.splice(triplets_index[i], 3);
+				triplets_num += 1;
+				break;
+			}
+	}
+
+	if (triplets_num == 3){
+		let pairs_index = [];
+
+		if (hand_tiles_copy.length == 2){
+			if (hand_tiles_copy[0] == hand_tiles_copy[1])
+				return add_fan(index, score);
+			else
+				return false;
+		}
+		for (let i = 0; i < hand_tiles_copy.length; i++)
+			if (i < hand_tiles_copy.length - 1
+				&& hand_tiles_copy[i] == hand_tiles_copy[i + 1]
+				&& (i == 0 || !(hand_tiles_copy[i] == hand_tiles_copy[i - 1])))
+				pairs_index.push(i);
+
+		for (let pair_num = 0; pair_num < pairs_index.length; pair_num++) {
+			let triplets_index = [];
+			let hand_tiles_copy2 = hand_tiles_copy.copy();
+			hand_tiles_copy2.splice(pairs_index[pair_num], 2);
+			if (check_sequences(hand_tiles_copy2)) return add_fan(index, score);
+		}
+	}
+	return false;
+};
+
+fan_dic[8] = function fan_3tongke (tiles, last_tile){
+	let index = 8;
+	let score = 2;
+
+	let triplets_num = 0;
+	let ke = [];
+	for (let i = 0; i < out_group_num; i++)
+		if (out_type_array[i] == 2
+			|| out_type_array[i] == 3
+			|| out_type_array[i] == 4){
+			ke.push(out_tiles[i][0]);
+			triplets_num ++;
+		}
+
+	let hand_tiles_copy = hand_tiles.copy();
+	hand_tiles_copy.push(last_tile);
+
+	let triplets_index = [];
+	for (let i = 0; i < hand_tiles_copy.length - 2; i++)
+		if (hand_tiles_copy[i] == hand_tiles_copy[i + 1]
+			&& hand_tiles_copy[i] == hand_tiles_copy[i + 2]
+			&& (i == 0 || !(hand_tiles_copy[i] == hand_tiles_copy[i - 1])))
+			triplets_index.push(i);
+
+	triplets_num += triplets_index.length;
+
+	for(i = triplets_index.length - 1; i>=0; i--){
+		ke.push(hand_tiles_copy[triplets_index[i]]);
+		hand_tiles_copy.splice(triplets_index[i], 3);
+	}
+
+	if (triplets_num >= 3){
+		let pairs_index = [];
+
+		if (hand_tiles_copy.length == 2)
+			if (hand_tiles_copy[0] != hand_tiles_copy[1])
+				return false;
+		else{
+			for (let i = 0; i < hand_tiles_copy.length; i++)
+				if (i < hand_tiles_copy.length - 1
+					&& hand_tiles_copy[i] == hand_tiles_copy[i + 1]
+					&& (i == 0 || !(hand_tiles_copy[i] == hand_tiles_copy[i - 1])))
+					pairs_index.push(i);
+
+			for (let pair_num = 0; pair_num < pairs_index.length; pair_num++) {
+				let triplets_index = [];
+				let hand_tiles_copy2 = hand_tiles_copy.copy();
+				hand_tiles_copy2.splice(pairs_index[pair_num], 2);
+				if (!check_sequences(hand_tiles_copy2)) return false;
+				else {
+					ke.sort_tiles();
+					if (ke[2] > 40) return false;
+					if (ke[0] % 10 == ke[1] % 10 && ke[0] % 10 == ke[2] % 10)
+						return add_fan(index, score);
+				}
+			}
+		}
+	}
+	
+	return false;
+};
+
+fan_dic[9] = function fan_xiao3yuan (tiles, last_tile){
+	let index = 9;
+	let score = 2;
+
+	let all = tiles.copy();
+	all.push(last_tile);
+	all.sort_tiles();
+
+	if (all[13] == 55
+		&& all[12] == 55
+		&& all[10] == 53
+		&& all[9] == 53
+		&& all[7] == 51
+		&& all[6] == 51
+		&& all[5] != 51)
+		return add_fan(index, score);
+	return false;
+};
+
+fan_dic[10] = function fan_hunlaotou (tiles, last_tile){
+	let index = 10;
+	let score = 2;
+
+	let all = tiles.copy();
+	all.push(last_tile);
+	all.sort_tiles();
+
+	for (tile of all)
+		if (tile < 40 && (tile % 10 != 1 && tile % 10 != 9))
+			return false;
+	
+	return add_fan(index, score);
+};
+
+fan_dic[11] = function fan_pinghu (tiles, last_tile){
+	if (out_group_num != 0)
+		return false;
+
+	if (last_tile > 40)
+		return false;
+	
+	let index = 11;
+	let score = 1;
+	let all = tiles.copy();
+
+	let pairs_index = [];
+	for (let i = 0; i < all.length; i++)
+		if (i < all.length - 1
+			&& all[i] == all[i + 1]
+			&& (i == 0 || !(all[i] == all[i - 1])))
+			pairs_index.push(i);
+
+	for (let pair_num = 0; pair_num < pairs_index.length; pair_num++) {
+
+		if (all[pairs_index[pair_num]] > 50
+			|| all[pairs_index[pair_num]] == self_wind 
+			|| all[pairs_index[pair_num]] == circle_wind)
+			break;
+
+		let all_copy = all.copy();
+		all_copy.splice(pairs_index[pair_num], 2);
+
+		let temp = all_copy.copy();
+		temp.push(last_tile);
+		temp.sort_tiles();
+		if (!check_sequences(temp)) break;
+
+		let HuaSe = Math.floor(last_tile / 10);
+		let ShuZi = last_tile % 10;
+
+		let a, b;
+
+		let temp_copy = temp.copy();
+
+		if (ShuZi >= 1 && ShuZi <= 6){
+			let next_1 = temp.indexOf(ShuZi + 1);
+			let next_2 = temp.indexOf(ShuZi + 2);
+			if (next_1 != -1 && next_2 != -1){
+				temp_copy.splice(next_2, 1);
+				temp_copy.splice(next_1, 1);
+				if (check_sequences(temp_copy))
+					return add_fan(index, score);
+			}
+		}
+
+		temp_copy = temp.copy();
+
+		if (ShuZi >= 4 && ShuZi <= 9){
+			let last_1 = temp.indexOf(ShuZi - 1);
+			let last_2 = temp.indexOf(ShuZi - 2);
+			if (last_1 != -1 && last_2 != -1){
+				temp_copy.splice(last_1, 1);
+				temp_copy.splice(last_2, 1);
+				if (check_sequences(temp_copy))
+					return add_fan(index, score);
+			}
+		}
+	}
+
+	return false;
+};
+
+fan_dic[12] = function fan_1qi (tiles, last_tile){
+	let index = 12;
+	let score = menqing ? 2 : 1;
+	let all = hand_tiles.copy();
+	all.push(last_tile);
+
+	let ke = 0;
+	let usable_out_tiles = [];
+
+	for(let i = 0; i < out_group_num; i++){
+		if ((out_type_array[i] != 1) || (out_tiles[i][0] % 10 != 1
+				&& out_tiles[i][0] % 10 != 4
+				&& out_tiles[i][0] % 10 != 7))
+			ke++;
+		else
+			usable_out_tiles.push[i];
+
+	}
+	if (ke > 1) return false;
+
+	let pairs_index = [];
+	for (let i = 0; i < all.length; i++)
+		if (i < all.length - 1
+			&& all[i] == all[i + 1]
+			&& (i == 0 || !(all[i] == all[i - 1])))
+			pairs_index.push(i);
+
+	for (let pair_num = 0; pair_num < pairs_index.length; pair_num++) {
+
+		let all_copy = all.copy();
+		all_copy.splice(pairs_index[pair_num], 2);
+
+		for (let i of usable_out_tiles){
+			all_copy.push(out_tiles[i][0]);
+			all_copy.push(out_tiles[i][1]);
+			all_copy.push(out_tiles[i][2]);
+		}	
+
+		let temp_array = [0, 0, 0];
+		let temp_tiles = [[], [], []];
+		let is_1_9 = false;
+		all_copy.sort_tiles();
+
+		for (let i = 0; i < all_copy.length; i++){
+			let kind = Math.floor(all_copy[i] / 10) - 1;
+			let num = all_copy[i] % 10;
+			if (num == temp_array[kind] + 1){
+				temp_array[kind]++;
+				temp_tiles[kind].push(i);
+			}
+			if (temp_array[kind] == 9){
+				is_1_9 = true;
+				for (let j = 8; j >= 0; j--){
+					all_copy.splice(temp_tiles[kind][j], 1);
+				}
+				if (all_copy.length == 0) return add_fan(index, score);
+				else if (all_copy.length == 3){
+					if ((all_copy[0] == all_copy[1] && all_copy[0] == all_copy[2])
+						|| (all_copy[0]+1 == all_copy[1] && all_copy[0]+2 == all_copy[2]))
+						return add_fan(index, score);
+				}
+			}
+		}		
+	}
+
+	return false;
+};
+
+fan_dic[13] = function fan_1bei (tiles, last_tile){
+	if (!menqing) return false;
+	let index = 13;
+	let score = 1;
+	let all = tiles.copy();
+	all.push(last_tile);
+
+
+};
+
+
+fan_dic[14] = function fan_3tongshun (tiles, last_tile){};
+
+
+fan_dic[15] = function fan_chunquan (tiles, last_tile){};
+
+
+fan_dic[16] = function fan_hunquan (tiles, last_tile){};
+
+
+fan_dic[17] = function fan_yi (tiles, last_tile){};
+
+
+class mianzi {
+	constructor(tiles, last_tile) {
+		this.tiles = [];
+		this.tiles = this.tiles.copy();
+		this.last_tile = last_tile;
+		this.mianzi_array = [[]];
+		this.mianzi_type = [[]];
+		this.jiang = [];
+		this.possible_mianzi = 0;
+		this.hand_tiles = hand_tiles.copy();
+	}
+
+	check_seq (tiles){
+		let tiles_copy = tiles.copy();
+		let seq = [];
+
+		for (let seq_num = 0; seq_num < parseInt(tiles.length / 3); seq_num++) {
+			let find = 1;
+			let seq_index = [0];
+
+			for (let i = 1; i < tiles_copy.length; i++) {
+				if (tiles_copy[i] == tiles_copy[0] + find) {
+					seq_index.push(i);
+					find++;
+				}
+				if (find >= 3) break;
+			}
+			if (seq_index.length == 3) {
+				seq.push(tiles_copy[seq_index[2]]);
+				seq.push(tiles_copy[seq_index[1]]);
+				seq.push(tiles_copy[0]);
+				tiles_copy.splice(seq_index[2], 1);
+				tiles_copy.splice(seq_index[1], 1);
+				tiles_copy.splice(0, 1); 
+			} else return false;
+		}
+		return seq.reverse();
+	}
+
+
+	split_mianzi(){
+		let out_tiles_temp = [];
+		let out_type_temp = [];
+		for (let i = 0; i < out_group_num; i++){
+			out_tiles_temp.push(out_tiles[i]);
+			if (out_type_array[i] == 1)
+				out_type_temp.push(2); // mianzi_type 0暗顺，1暗刻，2明顺，3明刻/杠, 4暗杠
+			else if (out_type_array[i] == 2 || out_type_array[i] == 3)
+				out_type_temp.push(3); 
+			else if (out_type_array[i] == 4)
+				out_type_temp.push(4);
+		}
+
+		let pairs_index = [];
+		let all = this.hand_tiles.copy();
+		all.push(this.last_tile);
+		all.sort_tiles();
+
+		if (all.length == 2){
+			this.jiang[0] = this.last_tile;
+			this.possible_mianzi = 1;
+			return;
+		}
+
+		for (let i = 0; i < all.length; i++)
+			if (i < all.length - 1 && all[i] == all[i + 1] && (i == 0 || !(all[i] == all[i - 1]))) pairs_index.push(i);
+
+		for (let pair_num = 0; pair_num < pairs_index.length; pair_num++) {
+			let triplets_index = [];
+			let tiles_copy = all.copy();
+			let jiang_temp = tiles_copy[pairs_index[pair_num]];
+			
+			tiles_copy.splice(pairs_index[pair_num], 2);
+
+			for (let i = 0; i < tiles_copy.length; i++)
+				if (i < tiles_copy.length - 2
+					&& tiles_copy[i] == tiles_copy[i + 1]
+					&& tiles_copy[i] == tiles_copy[i + 2]
+					&& (i == 0 || !(tiles_copy[i] == tiles_copy[i - 1]))){
+					triplets_index.push(i);
+				}
+					
+			let triplets_num = triplets_index.length;
+
+
+			let temp = this.check_seq(tiles_copy);
+			if (temp != false) {
+				this.mianzi_array.push([]);
+				this.mianzi_type.push([]);
+				this.mianzi_array[this.possible_mianzi] = out_tiles_temp.copy();
+				this.mianzi_type[this.possible_mianzi] = out_type_temp.copy();
+				for (let i = 0; i < temp.length / 3; i++){
+					this.mianzi_array[this.possible_mianzi].push(
+						[temp[3 * i], temp[3 * i + 1], temp[3 * i + 2]]);
+					this.mianzi_type[this.possible_mianzi].push(0);// mianzi_type 0暗顺，1暗刻，2明顺，3明刻/杠, 4暗杠
+				}
+				this.jiang[this.possible_mianzi] = jiang_temp;
+				this.possible_mianzi ++;
+			}
+			
+			if (triplets_num == (tiles.length - 2) / 3){
+				this.mianzi_array.push([]);
+				this.mianzi_type.push([]);
+				this.mianzi_array[this.possible_mianzi] = out_tiles_temp.copy();
+				this.mianzi_type[this.possible_mianzi] = out_type_temp.copy();
+				for (let i = 0; i < triplets_num; i++){
+					this.mianzi_array[this.possible_mianzi].push(
+						[tiles_copy[triplets_index[i]], tiles_copy[triplets_index[i]], tiles_copy[triplets_index[i]]]);
+					this.mianzi_type[this.possible_mianzi].push(1);// mianzi_type 0暗顺，1暗刻，2明顺，3明刻/杠, 4暗杠
+				}
+				this.jiang[this.possible_mianzi] = jiang_temp;
+				this.possible_mianzi ++;
+				return;
+			}
+
+			
+			if (triplets_num == 1) {
+				let tiles_copy2 = tiles_copy.copy();
+				tiles_copy2.splice(triplets_index[0], 3);
+
+				let temp = this.check_seq(tiles_copy2);
+				if (temp != false) {
+					this.mianzi_array.push([]);
+					this.mianzi_type.push([]);
+					this.mianzi_array[this.possible_mianzi] = out_tiles_temp.copy();
+					this.mianzi_type[this.possible_mianzi] = out_type_temp.copy();
+					
+					this.mianzi_array[this.possible_mianzi].push(
+						[tiles_copy[triplets_index[0]], tiles_copy[triplets_index[0]], tiles_copy[triplets_index[0]]]);
+					this.mianzi_type[this.possible_mianzi].push(1);// mianzi_type 0暗顺，1暗刻，2明顺，3明刻/杠, 4暗杠
+
+					for (let i = 0; i < temp.length / 3; i++){
+						this.mianzi_array[this.possible_mianzi].push(
+							[temp[3 * i], temp[3 * i + 1], temp[3 * i + 2]]);
+						this.mianzi_type[this.possible_mianzi].push(0);// mianzi_type 0暗顺，1暗刻，2明顺，3明刻/杠, 4暗杠
+					}
+					this.jiang[this.possible_mianzi] = jiang_temp;
+					this.possible_mianzi ++;
+				}
+			}
+
+			if (triplets_num == 2) {
+				for (let j = 0; j < 2; j++) {
+					let tiles_copy2 = tiles_copy.copy();
+					tiles_copy2.splice(triplets_index[j], 3);
+					
+					let temp = this.check_seq(tiles_copy2);
+					if (temp != false) {
+						this.mianzi_array.push([]);
+				this.mianzi_type.push([]);
+						this.mianzi_array[this.possible_mianzi] = out_tiles_temp.copy();
+						this.mianzi_type[this.possible_mianzi] = out_type_temp.copy();
+						
+						this.mianzi_array[this.possible_mianzi].push(
+							[tiles_copy[triplets_index[j]], tiles_copy[triplets_index[j]], tiles_copy[triplets_index[j]]]);
+						this.mianzi_type[this.possible_mianzi].push(1);// mianzi_type 0暗顺，1暗刻，2明顺，3明刻/杠, 4暗杠
+						
+						for (let i = 0; i < temp.length / 3; i++){
+							this.mianzi_array[this.possible_mianzi].push(
+								[temp[3 * i], temp[3 * i + 1], temp[3 * i + 2]]);
+							this.mianzi_type[this.possible_mianzi].push(0);// mianzi_type 0暗顺，1暗刻，2明顺，3明刻/杠, 4暗杠
+						}
+						this.jiang[this.possible_mianzi] = jiang_temp;
+						this.possible_mianzi ++;
+					}
+				}
+
+				let tiles_copy2 = tiles_copy.copy();
+				tiles_copy2.splice(triplets_index[1], 3);
+				tiles_copy2.splice(triplets_index[0], 3);
+				let temp = this.check_seq(tiles_copy2);
+				if (temp != false) {
+					this.mianzi_array.push([]);
+					this.mianzi_type.push([]);
+					this.mianzi_array[this.possible_mianzi] = out_tiles_temp.copy();
+					this.mianzi_type[this.possible_mianzi] = out_type_temp.copy();
+
+					this.mianzi_array[this.possible_mianzi].push(
+						[tiles_copy[triplets_index[1]], tiles_copy[triplets_index[1]], tiles_copy[triplets_index[1]]]);
+					this.mianzi_type[this.possible_mianzi].push(1);// mianzi_type 0暗顺，1暗刻，2明顺，3明刻/杠, 4暗杠
+					this.mianzi_array[this.possible_mianzi].push(
+						[tiles_copy[triplets_index[0]], tiles_copy[triplets_index[0]], tiles_copy[triplets_index[0]]]);
+					this.mianzi_type[this.possible_mianzi].push(1);// mianzi_type 0暗顺，1暗刻，2明顺，3明刻/杠, 4暗杠
+
+					for (let i = 0; i < temp.length / 3; i++){
+						this.mianzi_array[this.possible_mianzi].push(
+							[temp[3 * i], temp[3 * i + 1], temp[3 * i + 2]]);
+						this.mianzi_type[this.possible_mianzi].push(0);// mianzi_type 0暗顺，1暗刻，2明顺，3明刻/杠, 4暗杠
+					}
+					this.jiang[this.possible_mianzi] = jiang_temp;
+					this.possible_mianzi ++;
+				}
+			}
+
+			if (triplets_num == 3) {
+				for (let j = 0; j < 3; j++) {
+					let tiles_copy2 = tiles_copy.copy();
+					tiles_copy2.splice(triplets_index[j], 3);
+
+					let temp = this.check_seq(tiles_copy2);
+					if (temp != false) {
+						this.mianzi_array.push([]);
+						this.mianzi_type.push([]);
+						this.mianzi_array[this.possible_mianzi] = out_tiles_temp.copy();
+						this.mianzi_type[this.possible_mianzi] = out_type_temp.copy();
+						
+						this.mianzi_array[this.possible_mianzi].push(
+							[tiles_copy[triplets_index[j]], tiles_copy[triplets_index[j]], tiles_copy[triplets_index[j]]]);
+						this.mianzi_type[this.possible_mianzi].push(1);// mianzi_type 0暗顺，1暗刻，2明顺，3明刻/杠, 4暗杠
+						
+						for (let i = 0; i < temp.length / 3; i++){
+							this.mianzi_array[this.possible_mianzi].push(
+								[temp[3 * i], temp[3 * i + 1], temp[3 * i + 2]]);
+							this.mianzi_type[this.possible_mianzi].push(0);// mianzi_type 0暗顺，1暗刻，2明顺，3明刻/杠, 4暗杠
+						}
+						this.jiang[this.possible_mianzi] = jiang_temp;
+						this.possible_mianzi ++;
+					}
+				}
+
+				for (let j = 0; j < 3; j++) {
+					let tiles_copy2 = tiles_copy.copy();
+					let triplets_index_copy = triplets_index.copy();
+					triplets_index_copy.splice(j, 1);
+					tiles_copy2.splice(triplets_index_copy[1], 3);
+					tiles_copy2.splice(triplets_index_copy[0], 3);
+
+					let temp = this.check_seq(tiles_copy2);
+					if (temp != false) {
+						this.mianzi_array.push([]);
+						this.mianzi_type.push([]);
+						this.mianzi_array[this.possible_mianzi] = out_tiles_temp.copy();
+						this.mianzi_type[this.possible_mianzi] = out_type_temp.copy();
+
+						this.mianzi_array[this.possible_mianzi].push(
+							[tiles_copy[triplets_index_copy[1]], tiles_copy[triplets_index_copy[1]], tiles_copy[triplets_index_copy[1]]]);
+						this.mianzi_type[this.possible_mianzi].push(1);// mianzi_type 0暗顺，1暗刻，2明顺，3明刻/杠, 4暗杠
+						this.mianzi_array[this.possible_mianzi].push(
+							[tiles_copy[triplets_index_copy[0]], tiles_copy[triplets_index_copy[0]], tiles_copy[triplets_index_copy[0]]]);
+						this.mianzi_type[this.possible_mianzi].push(1);// mianzi_type 0暗顺，1暗刻，2明顺，3明刻/杠, 4暗杠
+
+						for (let i = 0; i < temp.length / 3; i++){
+							this.mianzi_array[this.possible_mianzi].push(
+								[temp[3 * i], temp[3 * i + 1], temp[3 * i + 2]]);
+							this.mianzi_type[this.possible_mianzi].push(0);// mianzi_type 0暗顺，1暗刻，2明顺，3明刻/杠, 4暗杠
+						}
+						this.jiang[this.possible_mianzi] = jiang_temp;
+						this.possible_mianzi ++;
+					}
+				}
+
+				let tiles_copy2 = tiles_copy.copy();
+				tiles_copy2.splice(triplets_index[2], 3);
+				tiles_copy2.splice(triplets_index[1], 3);
+				tiles_copy2.splice(triplets_index[0], 3);
+				let temp = this.check_seq(tiles_copy2);
+				if (temp != false) {
+					this.mianzi_array.push([]);
+					this.mianzi_type.push([]);
+					this.mianzi_array[this.possible_mianzi] = out_tiles_temp.copy();
+					this.mianzi_type[this.possible_mianzi] = out_type_temp.copy();
+
+					this.mianzi_array[this.possible_mianzi].push(
+						[tiles_copy[triplets_index[2]], tiles_copy[triplets_index[2]], tiles_copy[triplets_index[2]]]);
+					this.mianzi_type[this.possible_mianzi].push(1);// mianzi_type 0暗顺，1暗刻，2明顺，3明刻/杠, 4暗杠
+					this.mianzi_array[this.possible_mianzi].push(
+						[tiles_copy[triplets_index[1]], tiles_copy[triplets_index[1]], tiles_copy[triplets_index[1]]]);
+					this.mianzi_type[this.possible_mianzi].push(1);// mianzi_type 0暗顺，1暗刻，2明顺，3明刻/杠, 4暗杠
+					this.mianzi_array[this.possible_mianzi].push(
+						[tiles_copy[triplets_index[0]], tiles_copy[triplets_index[0]], tiles_copy[triplets_index[0]]]);
+					this.mianzi_type[this.possible_mianzi].push(1);// mianzi_type 0暗顺，1暗刻，2明顺，3明刻/杠, 4暗杠
+
+					for (let i = 0; i < temp.length / 3; i++){
+						this.mianzi_array[this.possible_mianzi].push(
+							[temp[3 * i], temp[3 * i + 1], temp[3 * i + 2]]);
+						this.mianzi_type[this.possible_mianzi].push(0);// mianzi_type 0暗顺，1暗刻，2明顺，3明刻/杠, 4暗杠
+					}
+					this.jiang[this.possible_mianzi] = jiang_temp;
+					this.possible_mianzi ++;
+				}
+			}
+		}
+		return;
+	};
+}
+
+
+function calculate_not_yiman(tiles, last_tile){
+	fan_score_array = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+	fan_num = 0;
+	fan_array = [];
+
+	let check_fan_list = [];
+	let if_qidui = false;
+	let mianzis = new mianzi(tiles, last_tile);
+
+	mianzis.split_mianzi();
+	let mianzi_array = mianzis.mianzi_array;
+	let mianzi_type = mianzis.mianzi_type;
+	let jiang = mianzis.jiang;
+	let possible_mianzi = mianzis.possible_mianzi;
+
+	let content = "";
+	for (let i = 0; i < possible_mianzi; i++){
+		content += "组" + (i + 1) + ":<br>";
+		for (let j = 0; j < 4; j++){
+			for (let k = 0; k < 3; k++){
+				content += all_tiles_dic[mianzi_array[i][j][k]];
+			}
+			let temp;
+			switch (mianzi_type[i][j]){
+				case 0: temp = "（暗顺）"; break;
+				case 1: temp = "（暗刻）"; break;
+				case 2: temp = "（明顺）"; break;
+				case 3: temp = "（明刻/杠）"; break;
+				case 4: temp = "（暗杠）"; break;
+			}
+			content += temp;
+			content += "<br>";
+		}
+		content += all_tiles_dic[jiang[i]] + all_tiles_dic[jiang[i]] + "<br> <br>";
+		
+	}
+
+	return content;
+
+
+	if (!menqing) check_fan_list = fan_not_menqing.copy();
+	else for(let i = 0; i < 18; i++) check_fan_list.push(true);
+
+	for(let i = 0; i < 18; i++)
+		if (check_fan_list[i])
+			if (fan_dic[i](tiles, last_tile))
+				for (let j = i; j < 18; j++)
+					check_fan_list[j] = check_fan_list[j] && fan_map[i][j];
+
+
+	if (fan_num != 0)
+		for (let i = 0; i < 18; i++);
+}
+
+
+
+
+//---------------------------------------//
+
 function check_situations(tiles) {
 	tiles.sort_tiles();
 
@@ -934,8 +1830,11 @@ function check_seven_pairs(tiles) {
 	if (out_group_num != 0)
 		return false;
 
-	for (let i = 0; i < tiles.length; i += 2)
+	for (let i = 0; i < tiles.length; i += 2){
 		if (!(tiles[i] == tiles[i + 1])) return false;
+		if (i < tiles.length-2 && (tiles[i] == tiles[i + 2]))
+			return false;
+	}
 	return true;
 };
 
@@ -946,7 +1845,7 @@ function check_thirteen_yao(tiles) {
 	let tiles_copy = tiles.copy();
 	let orphans = [11, 19, 21, 29, 31, 39, 41, 43, 45, 47, 51, 53, 55, 0];
 	for (let i = 0; i < tiles_copy.length; i++)
-		if (!(tiles_copy[i] == orphans[i]))
+		if (!(tiles_copy[i] == orphans[i])){
 			if (i == 0)
 				return false;
 			else if (!(tiles_copy[i] == tiles_copy[i - 1]))
@@ -955,6 +1854,7 @@ function check_thirteen_yao(tiles) {
 				tiles_copy.splice(i, 1);
 				break;
 			}
+		}
 	for (let i = 0; i < tiles_copy.length; i++)
 		if (!(tiles_copy[i] == orphans[i])) return false;
 	return true;
@@ -963,11 +1863,12 @@ function check_thirteen_yao(tiles) {
 function check_chichen_hu(tiles) {
 	let pairs_index = [];
 
-	if (tiles.length == 2)
+	if (tiles.length == 2){
 		if (tiles[0] == tiles[1])
 			return true;
 		else
 			return false;
+	}
 
 	for (let i = 0; i < tiles.length; i++)
 		if (i < tiles.length - 1 && tiles[i] == tiles[i + 1] && (i == 0 || !(tiles[i] == tiles[i - 1]))) pairs_index.push(i);
@@ -1013,8 +1914,8 @@ function check_chichen_hu(tiles) {
 				let tiles_copy2 = tiles_copy.copy();
 				let triplets_index_copy = triplets_index.copy();
 				triplets_index_copy.splice(j, 1);
-				tiles_copy2.splice(triplets_index[1], 3);
-				tiles_copy2.splice(triplets_index[0], 3);
+				tiles_copy2.splice(triplets_index_copy[1], 3);
+				tiles_copy2.splice(triplets_index_copy[0], 3);
 				if (check_sequences(tiles_copy2)) return true;
 			}
 			tiles_copy.splice(triplets_index[2], 3);
