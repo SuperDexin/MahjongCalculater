@@ -337,7 +337,7 @@ function tiles_in_13_or_14(){
 			
 
 		if (!gang) {
-			document.getElementById("fortune3").selected = false;
+			document.getElementById("fortune3").checked = false;
 			document.getElementById("gangkai").style.color = "gray";
 			document.getElementById("fortune3").disabled = true;
 			extra_states[2] = false;
@@ -1184,6 +1184,7 @@ fan_dic[12] = function fan_1qi (obj){
 fan_dic[13] = function fan_1bei (obj){
 	if (obj.qidui) return false;
 	if (!menqing) return false;
+	if (obj.fan_score_array[1] != 0) return false;
 	let index = 13;
 	let score = 1;
 	let all = obj.all.copy();
