@@ -1239,6 +1239,8 @@ fan_dic[15] = function fan_chunquan (obj){
 			&& (obj.mianzi_array[i][0] % 10 == 1 || obj.mianzi_array[i][2] % 10 == 9)))
 			return false;
 	}
+
+	console.log(obj.jiang);
 	
 	return (obj.jiang < 40 && (obj.jiang % 10 == 1 || obj.jiang % 10 == 9)) ? obj.add_fan(index, score) : false;
 };
@@ -1607,7 +1609,7 @@ class one_of_possible_mianzi{
 					this.hu_pos_num ++;
 					break;
 				}
-		if(this.jiang = this.last_tile){
+		if(this.jiang == this.last_tile){
 			this.hu_pos.push([5, 0]);
 			this.hu_pos_num ++;
 		}
