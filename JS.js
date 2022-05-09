@@ -405,17 +405,23 @@ function set_self_wind(value){
 
 function set_extra_states(value){
 	value = parseInt(value);
-	extra_states[value] = !extra_states[value];
+	extra_states[value] = !extra_states[value]; //[0]自摸 [1]一发 [2]杠开 [3]抢杠 [4]海底/河底 [5]天/地和
 	if (!extra_states[value])
 		if (value == 0){
 			extra_states[2] = false;
 			extra_states[5] = false;
 		}
 
-	if (extra_states[value]){
+	if (extra_states[value]){ 
 		switch (value){
 			case 0: extra_states[3] = false; break; // 自摸必不抢杠
-			case 1: extra_states[2] = false; break; // 一发必不岭上
+			case 1: {
+				extra_states[2] = false; // 一发必不岭上
+				if (richi_state == 2){
+					extra_states[4] = false; //两立直一发必不海底
+				}
+				break;
+			}
 			case 2: {
 				extra_states[0] = true;  // 岭上必定自摸
 				extra_states[1] = false; // 岭上必不一发
@@ -432,6 +438,9 @@ function set_extra_states(value){
 			case 4: {
 				extra_states[2] = false; // 海底必不杠开
 				extra_states[3] = false; // 海底必不抢杠
+				if (richi_state == 2){
+					extra_states[1] = false; //两立直海底必不一发
+				}
 				break;
 			}
 			case 5: {
@@ -896,29 +905,6 @@ function calculate_yiman_point(){
 
 //---------------------------------------//
 
-let fan_not_menqing = 
-				[false, false, true,  true,  true,  true,  true,  true,  true,  true,  true,  false, true,  false, true,  true,  true,  true ];
-let fan_shixia =
-				[false, false, true,  true,  false, false, false, false, false, false, false, false, true,  false, true,  true,  true,  false];
-
-let fan_map =[  [false, false, true,  true,  true,  false, false, false, false, false, true,  false, false, false, false, false, false, false], 
-				[false, false, true,  true,  true,  false, false, false, false, false, false, true,  false, false, false, true,  true,  false], 
-				[true,  true,  false, false, true,  true,  true,  true,  false, false, false, true,  true,  true,  false, true,  false, false], 
-				[true,  true,  false, false, false, true,  true,  true,  false, true,  true,  true,  true,  true,  false, false, true,  true ], 
-				[true,  true,  true,  false, false, true,  true,  true,  true,  false, false, true,  false, true,  true,  false, false, false], 
-				[false, false, true,  true,  true,  false, true,  true,  true,  true,  true,  false, false, false, false, false, false, true ], 
-				[false, false, true,  true,  true,  true,  false, true,  true,  true,  true,  false, false, false, false, true,  true,  true ], 
-				[false, false, true,  true,  true,  true,  true,  false, true,  true,  true,  false, false, false, false, true,  true,  true ], 
-				[false, false, false, false, true,  true,  true,  true,  false, false, true,  false, false, false, false, true,  true,  true ], 
-				[false, false, false, true,  false, true,  true,  true,  false, false, true,  false, false, false, false, false, true,  true ], 
-				[true,  false, false, true,  false, true,  true,  true,  true,  true,  false, false, false, false, false, false, false, true ], 
-				[false, true,  true,  true,  true,  false, false, false, false, false, false, false, true,  true,  true,  true,  true,  false], 
-				[false, false, true,  true,  false, false, false, false, false, false, false, true,  false, true,  false, false, false, true ], 
-				[false, false, true,  true,  true,  false, false, false, false, false, false, true,  true,  false, true,  false, true,  true ], 
-				[false, false, false, false, true,  false, false, false, false, false, false, true,  false, true,  false, true,  true,  true ], 
-				[false, true,  true,  false, false, false, true,  true,  true,  false, false, true,  false, false, true,  false, false, false], 
-				[false, true,  false, true,  false, false, true,  true,  true,  true,  false, true,  false, true,  true,  false, false, true ], 
-				[false, false, false, true,  false, true,  true,  true,  true,  true,  true,  false, true,  true,  true,  false, true,  false] ];
 
 let fan_name_dic = {
 	0	:	"七对",
@@ -941,149 +927,109 @@ let fan_name_dic = {
 	17	:	"役牌"
 }
 
-let fan_score_array = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-
-let fan_num = 0;
-let fan_array = [];
-
-
 let fan_dic = {};
-
-function add_fan(index, num){
-	fan_array.push(index);
-	fan_score_array[index] = num;
-	fan_num += num;
-	return true;
-}
-
-fan_dic[0] = function fan_qidui (tiles, last_tile){
+fan_dic[0] = function fan_qidui (obj){
 	if (!menqing) return false;
 	let index = 0;
 	let score = 2;
 
-	let all = tiles.copy();
-	all.push(last_tile);
-	all.sort_tiles();
+	let all = obj.all.copy();
 
 	if (check_seven_pairs(all))
-		return add_fan(index, score);
+		return obj.add_fan(index, score);
 
 	return false;
 };
 
-fan_dic[1] = function fan_erbei (tiles, last_tile){
+fan_dic[1] = function fan_erbei (obj){
 	if (!menqing) return false;
 	let index = 1;
 	let score = 3;
 
-	let all = tiles.copy();
-	all.push(last_tile);
-	all.sort_tiles();
+	let all = obj.all.copy();
+
+	for (let i = 0; i < 4; i++){
+		if (obj.mianzi_type[i] != 0) // mianzi_type 0暗顺，1暗刻，2明顺，3明刻/杠, 4暗杠
+			return false;
+	}
 
 	for (let i = 0; i < 14; i += 2)
 		if (!(all[i] == all[i + 1])) return false;
 
-	if (check_chichen_hu(all))
-		return add_fan(index, score);
-
-	return false;
-
+	return obj.add_fan(index, score);
 };
 
-fan_dic[2] = function fan_qing1se (tiles, last_tile){
+fan_dic[2] = function fan_qing1se (obj){
 	let index = 2;
 	let score = menqing ? 6 : 5;
 
-	let all = tiles.copy();
-	all.push(last_tile);
-	all.sort_tiles();
+	let all = obj.all.copy();
 
 	let kind = Math.floor(all[13] / 10);
 
 	if (kind != 1 && kind != 2 && kind != 3)
 		return false;
 
-	for (tile in all)
-		if (Math.floor(tile / 10) != kind) return false;
-
-	return add_fan(index, score);
+	for (tile of all)
+		if (Math.floor(tile / 10) != kind)	
+			return false;
+		 
+	return obj.add_fan(index, score);
 };
 
-fan_dic[3] = function fan_hun1se (tiles, last_tile){
+fan_dic[3] = function fan_hun1se (obj){
 	let index = 3;
 	let score = menqing ? 3 : 2;
 
-	let all = tiles.copy();
-	all.push(last_tile);
-	all.sort_tiles();
+	let all = obj.all.copy();
+	if (all[13] < 40) return false;
+	if (all[0] > 40) return false;
 
-	let kind = Math.floor(all[1] / 10);
-	if (kind != 1 && kind != 2 && kind != 3)
-		return false;
+	let kind = Math.floor(all[0] / 10);
 
-	for (tile in all){
+	for (tile of all){
 		let a = Math.floor(tile / 10);
 		if (a != kind
 			&& a != 4
 			&& a != 5) return false;
 	}
 
-	return add_fan(index, score);
+	return obj.add_fan(index, score);
 };
 
-fan_dic[4] = function fan_duanyao (tiles, last_tile){
+fan_dic[4] = function fan_duanyao (obj){
 	let index = 4;
 	let score = 1;
 
-	let all = tiles.copy();
-	all.push(last_tile);
-	all.sort_tiles();
+	let all = obj.all.copy();
 
-	for (tile in all){
+	for (tile of all){
 		let a = (tile % 10);
-		if (a == 1 || a == 9)
+		if ((a == 1 || a == 9) || tile > 40)
 			return false;
-		a = Math.floor(tile / 10);
-		if (a == 4 || a == 5) return false;
 	}
 
-	return add_fan(index, score);
+	return obj.add_fan(index, score);
 };
 
-fan_dic[5] = function fan_duiduihu (tiles, last_tile){
+fan_dic[5] = function fan_duiduihu (obj){
+	if (obj.qidui) return false;
 	let index = 5;
 	let score = 2;
 
-	for (let i = 0; i < out_group_num; i++)
-		if (out_type_array[i] != 2
-			&& out_type_array[i] != 3
-			&& out_type_array[i] != 4)
-			return false;
-
-	let triplets_index = [];
-	let triplets_num = out_group_num;
-	let hand_tiles_copy = hand_tiles.copy();
-	hand_tiles_copy.push(last_tile);
-	hand_tiles_copy.sort_tiles();
-
-	for (let i = 0; i < hand_tiles_copy.length - 2; i++)
-		if (hand_tiles_copy[i] == hand_tiles_copy[i + 1]
-			&& hand_tiles_copy[i] == hand_tiles_copy[i + 2]
-			&& (i == 0 || !(hand_tiles_copy[i] == hand_tiles_copy[i - 1])))
-			triplets_index.push(i);
-
-	triplets_num += triplets_index.length;
-
-	for(i = triplets_index.length - 1; i>=0; i--)
-		hand_tiles_copy.splice(triplets_index[i], 3);
-
-	if (hand_tiles_copy.length != 2 || hand_tiles_copy[0] != hand_tiles_copy[1])
+	for (let i = 0; i < 4; i++){
+		if (obj.mianzi_type[i] != 1
+		&& obj.mianzi_type[i] != 3
+		&& obj.mianzi_type[i] != 4) // mianzi_type 0暗顺，1暗刻，2明顺，3明刻/杠, 4暗杠
 		return false;
-	return add_fan(index, score);
+	}
+
+	return obj.add_fan(index, score);
 };
 
 
-fan_dic[6] = function fan_3gang (tiles, last_tile){
+fan_dic[6] = function fan_3gang (obj){
+	if (obj.qidui) return false;
 	let index = 6;
 	let score = 2;
 	let gang = 0;
@@ -1093,138 +1039,53 @@ fan_dic[6] = function fan_3gang (tiles, last_tile){
 			gang ++;
 
 	if (gang != 3) return false;
-	return add_fan(index, score);
+	return obj.add_fan(index, score);
 };
 
-fan_dic[7] = function fan_3anke (tiles, last_tile){
+fan_dic[7] = function fan_3anke (obj){
+	if (obj.qidui) return false;
 	let index = 7;
 	let score = 2;
+	let anke = 0;
 
-	let triplets_num = 0;
-	for (let i = 0; i < out_group_num; i++)
-		if (out_type_array[i] == 4)
-			triplets_num ++;
-
-	let hand_tiles_copy = hand_tiles.copy();
-
-	let triplets_index = [];
-	for (let i = 0; i < hand_tiles_copy.length - 2; i++)
-		if (hand_tiles_copy[i] == hand_tiles_copy[i + 1]
-			&& hand_tiles_copy[i] == hand_tiles_copy[i + 2]
-			&& (i == 0 || !(hand_tiles_copy[i] == hand_tiles_copy[i - 1])))
-			triplets_index.push(i);
-
-	triplets_num += triplets_index.length;
-
-	for(i = triplets_index.length - 1; i>=0; i--)
-		hand_tiles_copy.splice(triplets_index[i], 3);
-
-	hand_tiles_copy.push(last_tile);
-	if (triplets_num == 2 && extra_states[0]){
-		for (let i = 0; i < hand_tiles_copy.length - 2; i++)
-			if (hand_tiles_copy[i] == hand_tiles_copy[i + 1]
-				&& hand_tiles_copy[i] == hand_tiles_copy[i + 2]
-				&& (i == 0 || !(hand_tiles_copy[i] == hand_tiles_copy[i - 1]))) {
-				hand_tiles_copy.splice(triplets_index[i], 3);
-				triplets_num += 1;
-				break;
-			}
+	for (let i = 0; i < 4; i++){
+		if (obj.mianzi_type[i] == 1
+		|| obj.mianzi_type[i] == 4) // mianzi_type 0暗顺，1暗刻，2明顺，3明刻/杠, 4暗杠
+		anke ++;
 	}
+	if (anke < 3) return false; //小于三刻
 
-	if (triplets_num == 3){
-		let pairs_index = [];
+	if (extra_states[0]) return obj.add_fan(index, score); //大于等于三刻且自摸
 
-		if (hand_tiles_copy.length == 2){
-			if (hand_tiles_copy[0] == hand_tiles_copy[1])
-				return add_fan(index, score);
-			else
-				return false;
-		}
-		for (let i = 0; i < hand_tiles_copy.length; i++)
-			if (i < hand_tiles_copy.length - 1
-				&& hand_tiles_copy[i] == hand_tiles_copy[i + 1]
-				&& (i == 0 || !(hand_tiles_copy[i] == hand_tiles_copy[i - 1])))
-				pairs_index.push(i);
+	if (anke == 3) return false; // 三刻荣和，说明只有两个暗刻
 
-		for (let pair_num = 0; pair_num < pairs_index.length; pair_num++) {
-			let triplets_index = [];
-			let hand_tiles_copy2 = hand_tiles_copy.copy();
-			hand_tiles_copy2.splice(pairs_index[pair_num], 2);
-			if (check_sequences(hand_tiles_copy2)) return add_fan(index, score);
-		}
-	}
-	return false;
+	return obj.add_fan(index, score); // 四刻荣和
 };
 
-fan_dic[8] = function fan_3tongke (tiles, last_tile){
+fan_dic[8] = function fan_3tongke (obj){
+	if (obj.qidui) return false;
 	let index = 8;
 	let score = 2;
+	let ke_array = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
-	let triplets_num = 0;
-	let ke = [];
-	for (let i = 0; i < out_group_num; i++)
-		if (out_type_array[i] == 2
-			|| out_type_array[i] == 3
-			|| out_type_array[i] == 4){
-			ke.push(out_tiles[i][0]);
-			triplets_num ++;
-		}
-
-	let hand_tiles_copy = hand_tiles.copy();
-	hand_tiles_copy.push(last_tile);
-
-	let triplets_index = [];
-	for (let i = 0; i < hand_tiles_copy.length - 2; i++)
-		if (hand_tiles_copy[i] == hand_tiles_copy[i + 1]
-			&& hand_tiles_copy[i] == hand_tiles_copy[i + 2]
-			&& (i == 0 || !(hand_tiles_copy[i] == hand_tiles_copy[i - 1])))
-			triplets_index.push(i);
-
-	triplets_num += triplets_index.length;
-
-	for(i = triplets_index.length - 1; i>=0; i--){
-		ke.push(hand_tiles_copy[triplets_index[i]]);
-		hand_tiles_copy.splice(triplets_index[i], 3);
-	}
-
-	if (triplets_num >= 3){
-		let pairs_index = [];
-
-		if (hand_tiles_copy.length == 2)
-			if (hand_tiles_copy[0] != hand_tiles_copy[1])
-				return false;
-		else{
-			for (let i = 0; i < hand_tiles_copy.length; i++)
-				if (i < hand_tiles_copy.length - 1
-					&& hand_tiles_copy[i] == hand_tiles_copy[i + 1]
-					&& (i == 0 || !(hand_tiles_copy[i] == hand_tiles_copy[i - 1])))
-					pairs_index.push(i);
-
-			for (let pair_num = 0; pair_num < pairs_index.length; pair_num++) {
-				let triplets_index = [];
-				let hand_tiles_copy2 = hand_tiles_copy.copy();
-				hand_tiles_copy2.splice(pairs_index[pair_num], 2);
-				if (!check_sequences(hand_tiles_copy2)) return false;
-				else {
-					ke.sort_tiles();
-					if (ke[2] > 40) return false;
-					if (ke[0] % 10 == ke[1] % 10 && ke[0] % 10 == ke[2] % 10)
-						return add_fan(index, score);
-				}
-			}
+	for (let i = 0; i < 4; i++){
+		if ((obj.mianzi_type[i] == 1
+		|| obj.mianzi_type[i] == 3
+		|| obj.mianzi_type[i] == 4) // mianzi_type 0暗顺，1暗刻，2明顺，3明刻/杠, 4暗杠
+		&& obj.mianzi_array[i][0] < 40){
+			ke_array[obj.mianzi_array[i][0] % 10] ++;
 		}
 	}
 	
-	return false;
+	return (ke_array.indexOf(3) != -1) ? obj.add_fan(index, score) : false;
 };
 
-fan_dic[9] = function fan_xiao3yuan (tiles, last_tile){
+fan_dic[9] = function fan_xiao3yuan (obj){
+	if (obj.qidui) return false;
 	let index = 9;
 	let score = 2;
 
-	let all = tiles.copy();
-	all.push(last_tile);
-	all.sort_tiles();
+	let all = obj.all.copy();
 
 	if (all[13] == 55
 		&& all[12] == 55
@@ -1233,183 +1094,205 @@ fan_dic[9] = function fan_xiao3yuan (tiles, last_tile){
 		&& all[7] == 51
 		&& all[6] == 51
 		&& all[5] != 51)
-		return add_fan(index, score);
+		return obj.add_fan(index, score);
 	return false;
 };
 
-fan_dic[10] = function fan_hunlaotou (tiles, last_tile){
+fan_dic[10] = function fan_hunlaotou (obj){
 	let index = 10;
 	let score = 2;
 
-	let all = tiles.copy();
-	all.push(last_tile);
-	all.sort_tiles();
+	let all = obj.all.copy();
 
 	for (tile of all)
 		if (tile < 40 && (tile % 10 != 1 && tile % 10 != 9))
 			return false;
 	
-	return add_fan(index, score);
+	return obj.add_fan(index, score);
 };
 
-fan_dic[11] = function fan_pinghu (tiles, last_tile){
+fan_dic[11] = function fan_pinghu (obj){
+	if (obj.qidui) return false;
+
 	if (out_group_num != 0)
 		return false;
 
-	if (last_tile > 40)
+	if (obj.last_tile > 40)
 		return false;
 	
 	let index = 11;
 	let score = 1;
-	let all = tiles.copy();
 
-	let pairs_index = [];
-	for (let i = 0; i < all.length; i++)
-		if (i < all.length - 1
-			&& all[i] == all[i + 1]
-			&& (i == 0 || !(all[i] == all[i - 1])))
-			pairs_index.push(i);
-
-	for (let pair_num = 0; pair_num < pairs_index.length; pair_num++) {
-
-		if (all[pairs_index[pair_num]] > 50
-			|| all[pairs_index[pair_num]] == self_wind 
-			|| all[pairs_index[pair_num]] == circle_wind)
-			break;
-
-		let all_copy = all.copy();
-		all_copy.splice(pairs_index[pair_num], 2);
-
-		let temp = all_copy.copy();
-		temp.push(last_tile);
-		temp.sort_tiles();
-		if (!check_sequences(temp)) break;
-
-		let HuaSe = Math.floor(last_tile / 10);
-		let ShuZi = last_tile % 10;
-
-		let a, b;
-
-		let temp_copy = temp.copy();
-
-		if (ShuZi >= 1 && ShuZi <= 6){
-			let next_1 = temp.indexOf(ShuZi + 1);
-			let next_2 = temp.indexOf(ShuZi + 2);
-			if (next_1 != -1 && next_2 != -1){
-				temp_copy.splice(next_2, 1);
-				temp_copy.splice(next_1, 1);
-				if (check_sequences(temp_copy))
-					return add_fan(index, score);
-			}
-		}
-
-		temp_copy = temp.copy();
-
-		if (ShuZi >= 4 && ShuZi <= 9){
-			let last_1 = temp.indexOf(ShuZi - 1);
-			let last_2 = temp.indexOf(ShuZi - 2);
-			if (last_1 != -1 && last_2 != -1){
-				temp_copy.splice(last_1, 1);
-				temp_copy.splice(last_2, 1);
-				if (check_sequences(temp_copy))
-					return add_fan(index, score);
-			}
-		}
+	for (let i = 0; i < 4; i++){
+		if (obj.mianzi_type[i] != 0) // mianzi_type 0暗顺，1暗刻，2明顺，3明刻/杠, 4暗杠
+			return false;
 	}
 
-	return false;
+	if (obj.hu_pos[0] == 5) return false;
+	if (obj.hu_pos[1] == 1) return false; // 坎张
+	if ((obj.last_tile % 10 == 3 && obj.hu_pos[1] == 2) || (obj.last_tile % 10 == 7 && obj.hu_pos[1] == 0)) //边张
+		return false
+
+	return obj.add_fan(index, score);
 };
 
-fan_dic[12] = function fan_1qi (tiles, last_tile){
+fan_dic[12] = function fan_1qi (obj){
+	if (obj.qidui) return false;
+
 	let index = 12;
 	let score = menqing ? 2 : 1;
-	let all = hand_tiles.copy();
-	all.push(last_tile);
+	let all = obj.all.copy();
+	let shun = 0;
+	let temp = 0;
+	let temp_dic = {
+		11: 11,
+		14: 22,
+		17: 33,
+		21: 5,
+		24: 10,
+		27: 15,
+		31: 7,
+		34: 14,
+		37: 21
+	};
 
-	let ke = 0;
-	let usable_out_tiles = [];
-
-	for(let i = 0; i < out_group_num; i++){
-		if ((out_type_array[i] != 1) || (out_tiles[i][0] % 10 != 1
-				&& out_tiles[i][0] % 10 != 4
-				&& out_tiles[i][0] % 10 != 7))
-			ke++;
-		else
-			usable_out_tiles.push[i];
-
+	for (let i = 0; i < 4; i++){
+		if ((obj.mianzi_type[i] == 0
+		|| obj.mianzi_type[i] == 2) // mianzi_type 0暗顺，1暗刻，2明顺，3明刻/杠, 4暗杠
+		&& (obj.mianzi_array[i][0] % 10 == 1 
+			|| obj.mianzi_array[i][0] % 10 == 4
+			|| obj.mianzi_array[i][0] % 10 == 7)){
+			shun ++;
+			temp += temp_dic[obj.mianzi_array[i][0]];
+		}
 	}
-	if (ke > 1) return false;
 
-	let pairs_index = [];
-	for (let i = 0; i < all.length; i++)
-		if (i < all.length - 1
-			&& all[i] == all[i + 1]
-			&& (i == 0 || !(all[i] == all[i - 1])))
-			pairs_index.push(i);
+	if (shun == 3)
+		return (temp % 6 == 0) ? add_fan(index, score) : false;
 
-	for (let pair_num = 0; pair_num < pairs_index.length; pair_num++) {
-
-		let all_copy = all.copy();
-		all_copy.splice(pairs_index[pair_num], 2);
-
-		for (let i of usable_out_tiles){
-			all_copy.push(out_tiles[i][0]);
-			all_copy.push(out_tiles[i][1]);
-			all_copy.push(out_tiles[i][2]);
-		}	
-
-		let temp_array = [0, 0, 0];
-		let temp_tiles = [[], [], []];
-		let is_1_9 = false;
-		all_copy.sort_tiles();
-
-		for (let i = 0; i < all_copy.length; i++){
-			let kind = Math.floor(all_copy[i] / 10) - 1;
-			let num = all_copy[i] % 10;
-			if (num == temp_array[kind] + 1){
-				temp_array[kind]++;
-				temp_tiles[kind].push(i);
-			}
-			if (temp_array[kind] == 9){
-				is_1_9 = true;
-				for (let j = 8; j >= 0; j--){
-					all_copy.splice(temp_tiles[kind][j], 1);
-				}
-				if (all_copy.length == 0) return add_fan(index, score);
-				else if (all_copy.length == 3){
-					if ((all_copy[0] == all_copy[1] && all_copy[0] == all_copy[2])
-						|| (all_copy[0]+1 == all_copy[1] && all_copy[0]+2 == all_copy[2]))
-						return add_fan(index, score);
-				}
-			}
-		}		
-	}
+	if (shun == 4)
+		for (let i of obj.mianzi_array)
+			if ((temp - temp_dic[i[0]]) % 6 == 0) return obj.add_fan(index, score);
 
 	return false;
 };
 
-fan_dic[13] = function fan_1bei (tiles, last_tile){
+fan_dic[13] = function fan_1bei (obj){
+	if (obj.qidui) return false;
 	if (!menqing) return false;
 	let index = 13;
 	let score = 1;
-	let all = tiles.copy();
-	all.push(last_tile);
+	let all = obj.all.copy();
+	let shun_array = [];
 
+	for (let i = 0; i < 4; i++){
+		if (obj.mianzi_type[i] == 0
+		|| obj.mianzi_type[i] == 2){ // mianzi_type 0暗顺，1暗刻，2明顺，3明刻/杠, 4暗杠
+			if (shun_array.indexOf(obj.mianzi_array[i][0]) != -1){
+				return obj.add_fan(index, score);
+			}
+			shun_array.push(obj.mianzi_array[i][0]);
+		}
+	}
+
+	return false;
+};
+
+
+fan_dic[14] = function fan_3tongshun (obj){
+	if (obj.qidui) return false;
+	let index = 14;
+	let score = menqing ? 2 : 1;
+	let shun_array = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+	let temp_array = [];
+
+	for (let i = 0; i < 4; i++){
+		if ((obj.mianzi_type[i] == 0
+		|| obj.mianzi_type[i] == 2) // mianzi_type 0暗顺，1暗刻，2明顺，3明刻/杠, 4暗杠
+		&& obj.mianzi_array[i][0] < 40){
+			if (temp_array.indexOf(obj.mianzi_array[i][0]) == -1){
+				temp_array.push(obj.mianzi_array[i][0]);
+				shun_array[obj.mianzi_array[i][0] % 10] ++;
+			}
+		}
+	}
+	
+	return (shun_array.indexOf(3) != -1) ? obj.add_fan(index, score) : false;
 
 };
 
 
-fan_dic[14] = function fan_3tongshun (tiles, last_tile){};
+fan_dic[15] = function fan_chunquan (obj){
+	if (obj.qidui) return false;
+	let index = 15;
+	let score = menqing ? 3 : 2;
+	let shun_array = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+	let temp_array = [];
+
+	for (let i = 0; i < 4; i++){
+		if (!(obj.mianzi_array[i][0] < 40
+			&& (obj.mianzi_array[i][0] % 10 == 1 || obj.mianzi_array[i][2] % 10 == 9)))
+			return false;
+	}
+	
+	return (obj.jiang < 40 && (obj.jiang % 10 == 1 || obj.jiang % 10 == 9)) ? obj.add_fan(index, score) : false;
+};
 
 
-fan_dic[15] = function fan_chunquan (tiles, last_tile){};
+fan_dic[16] = function fan_hunquan (obj){
+	if (obj.qidui) return false;
+	let all = obj.all.copy();
+	if (all[13] < 40) return false;
+
+	let index = 16;
+	let score = menqing ? 2 : 1;
+	let shun_array = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+	let temp_array = [];
+
+	for (let i = 0; i < 4; i++){
+		if (!(obj.mianzi_array[i][0] > 40
+			|| obj.mianzi_array[i][0] % 10 == 1
+			|| obj.mianzi_array[i][2] % 10 == 9))
+			return false;
+	}
+	
+	return (obj.jiang > 40 || obj.jiang % 10 == 1 || obj.jiang % 10 == 9) ? obj.add_fan(index, score) : false;
+};
 
 
-fan_dic[16] = function fan_hunquan (tiles, last_tile){};
+fan_dic[17] = function fan_yi (obj){
+	if (obj.qidui) return false;
+	let index = 17;
+	let score = 0;
+	for (let i = 0; i < 4; i++){
+		if ((obj.mianzi_type[i] == 1
+		|| obj.mianzi_type[i] == 3
+		|| obj.mianzi_type[i] == 4)){ // mianzi_type 0暗顺，1暗刻，2明顺，3明刻/杠, 4暗杠
+			if (obj.mianzi_array[i][0] > 40){
+				let a = 6;
+				switch (obj.mianzi_array[i][0]){ // this.yi = [0, 0, 0, 0, 0]; //0中 1发 2白 3门风 4圈风
+					case 51: a = 0; score++; break;
+					case 53: a = 1; score++; break;
+					case 55: a = 2; score++; break;
+				}
+				if(obj.mianzi_array[i][0] == self_wind){
+					a = 3;
+					score++;
+				}
+				if(obj.mianzi_array[i][0] == circle_wind){
+					a = 4;
+					score++;
+				}
+				if (a < 5) obj.yi[a]++;
+			}
+		}
+	}
+
+	return obj.add_fan(index, score);
+};
 
 
-fan_dic[17] = function fan_yi (tiles, last_tile){};
-
+//---------------------------------------//
 
 class mianzi {
 	constructor(tiles, last_tile) {
@@ -1698,13 +1581,69 @@ class mianzi {
 }
 
 
-function calculate_not_yiman(tiles, last_tile){
-	fan_score_array = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-	fan_num = 0;
-	fan_array = [];
 
-	let check_fan_list = [];
-	let if_qidui = false;
+class one_of_possible_mianzi{
+	constructor(obj, num, tiles, last_tile){
+		this.mianzi_array = obj.mianzi_array[num];
+		this.mianzi_type = obj.mianzi_type[num];
+		this.jiang = obj.jiang[num];
+		this.tiles = tiles;
+		this.last_tile = last_tile;
+		this.hu_pos = [];
+		this.hu_pos_num = 0;
+		this.find_hu_pos();
+	}
+
+	find_hu_pos(){
+		for(let i = 0; i < 4; i++)
+			for (let j = 0; j < 3; j++)
+				if (this.last_tile == this.mianzi_array[i][j]){
+					this.hu_pos.push([i, j]);
+					this.hu_pos_num ++;
+					break;
+				}
+		if(this.jiang = this.last_tile){
+			this.hu_pos.push([5, 0]);
+			this.hu_pos_num ++;
+		}
+	}
+}
+
+class one_of_possible_hu_pos {
+	constructor(obj, num){
+		this.mianzi_array = obj.mianzi_array;
+		this.mianzi_type = obj.mianzi_type;
+		this.jiang = obj.jiang;
+		this.tiles = obj.tiles;
+		this.last_tile = obj.last_tile;
+		this.hu_pos = obj.hu_pos[num];
+		this.fan = 0;
+		this.fan_score_array = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+		this.qidui = false;
+		this.all = this.tiles.copy();
+		this.all.push(this.last_tile);
+		this.all.sort_tiles();
+
+		this.yi = [0, 0, 0, 0, 0]; //0中 1发 2白 3门风 4圈风
+	}
+
+	add_fan(index, num){
+		this.fan_score_array[index] = num;
+		this.fan += num;
+
+		if (index == 0) //七对
+			this.qidui = true;
+		if (index == 1 && this.qidui){ // 两杯
+			this.qidui = false;
+			this.fan -= 2;
+			this.fan_score_array[0] = 0;
+		}
+		return true;
+	}
+}
+
+
+function calculate_not_yiman(tiles, last_tile){
 	let mianzis = new mianzi(tiles, last_tile);
 
 	mianzis.split_mianzi();
@@ -1735,21 +1674,112 @@ function calculate_not_yiman(tiles, last_tile){
 		
 	}
 
+	//return content;
+
+
+
+	let obj_array = [];
+	let highest_fan = 0;
+	let highest_index = 0;
+
+	for (let i = 0; i < possible_mianzi; i++){
+		let obj = calculate_not_yiman_fan(mianzis, i, tiles, last_tile);
+		obj_array.push(obj);
+		if (obj.fan > highest_fan){
+			highest_fan = obj.fan;
+			highest_index = i;
+		}
+	}
+
+	let fan = highest_fan;
+	let final_obj = obj_array[highest_index];
+
+	switch (richi_state){
+		case 1: content += "立直 1 番<br>"; fan += 1; break;
+		case 2: content += "两立直 2 番<br>"; fan += 2; break;
+	}
+
+	if (menqing && extra_states[0]){ //extra_states [0]自摸 [1]一发 [2]杠开 [3]抢杠 [4]海底/河底 [5]天/地和
+		content += "门清自摸 1 番<br>"
+		fan += 1;
+	}
+
+	if (extra_states[1]){
+		content += "一发 1 番<br>"
+		fan += 1;
+	}
+
+	if (extra_states[2]){
+		content += "岭上开花 1 番<br>"
+		fan += 1;
+	}
+
+	if (extra_states[3]){
+		content += "抢杠 1 番<br>"
+		fan += 1;
+	}
+
+	if (extra_states[4] && self_wind == 41){
+		content += "海底捞月 1 番<br>"
+		fan += 1;
+	}
+
+	if (extra_states[4] && self_wind != 41){
+		content += "河底捞鱼 1 番<br>"
+		fan += 1;
+	}
+
+	for (let i = 0; i < 17; i++){
+		if (final_obj.fan_score_array[i] != 0){
+			content += fan_name_dic[i];
+			content += ` ${final_obj.fan_score_array[i]} 番<br>`;
+		}
+	}
+
+
+	for (let i = 0; i < 5; i++){
+		if (final_obj.yi[i] != 0){ //0中 1发 2白 3门风 4圈风
+			let temp = "";
+			switch (i){
+				case 0: temp = "役牌 中"; break;
+				case 1: temp = "役牌 发"; break;
+				case 2: temp = "役牌 白"; break;
+				case 3: temp = "门风刻"; break;
+				case 4: temp = "圈风刻"; break;
+			}
+			content += temp;
+			content += " 1 番<br>";
+			fan++;
+		}
+	}
+
+	content += `宝牌 ${dora_num} 番<br>`;
+	fan += dora_num;
+
+	content += `共计 ${fan} 番`;
 	return content;
+}
 
+function calculate_not_yiman_fan(obj, num, tiles, last_tile) {
 
-	if (!menqing) check_fan_list = fan_not_menqing.copy();
-	else for(let i = 0; i < 18; i++) check_fan_list.push(true);
+	let one = new one_of_possible_mianzi(obj, num, tiles, last_tile);
+	let hu_pos_num = one.hu_pos_num;
+	let obj_array = [];
+	let highest_fan = 0;
+	let highest_index = 0;
+	for (let i = 0; i < hu_pos_num; i++){
+		let one_pos = new one_of_possible_hu_pos(one, i);
+		for (let j = 0; j < 18; j++){
+			fan_dic[j](one_pos);
+		}
+		obj_array.push(one_pos);
+		if (one_pos.fan > highest_fan){
+			highest_fan = one_pos.fan;
+			highest_index = i;
+		}
+	}
 
-	for(let i = 0; i < 18; i++)
-		if (check_fan_list[i])
-			if (fan_dic[i](tiles, last_tile))
-				for (let j = i; j < 18; j++)
-					check_fan_list[j] = check_fan_list[j] && fan_map[i][j];
-
-
-	if (fan_num != 0)
-		for (let i = 0; i < 18; i++);
+	return obj_array[highest_index];
 }
 
 
