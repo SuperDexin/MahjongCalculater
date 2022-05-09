@@ -1047,17 +1047,21 @@ fan_dic[7] = function fan_3anke (obj){
 	let index = 7;
 	let score = 2;
 	let anke = 0;
+	let anke_array = [];
 
 	for (let i = 0; i < 4; i++){
 		if (obj.mianzi_type[i] == 1
-		|| obj.mianzi_type[i] == 4) // mianzi_type 0暗顺，1暗刻，2明顺，3明刻/杠, 4暗杠
-		anke ++;
+		|| obj.mianzi_type[i] == 4){ // mianzi_type 0暗顺，1暗刻，2明顺，3明刻/杠, 4暗杠
+			anke_array.push(i);
+			anke ++;
+		}
 	}
 	if (anke < 3) return false; //小于三刻
 
 	if (extra_states[0]) return obj.add_fan(index, score); //大于等于三刻且自摸
 
-	if (anke == 3) return false; // 三刻荣和，说明只有两个暗刻
+	if (anke == 3 && anke_array.indexOf(obj.hu_pos[0]) != -1) // 有一个刻荣和成刻，说明只有两个暗刻
+		return false; 
 
 	return obj.add_fan(index, score); // 四刻荣和
 };
@@ -1269,21 +1273,19 @@ fan_dic[17] = function fan_yi (obj){
 		|| obj.mianzi_type[i] == 3
 		|| obj.mianzi_type[i] == 4)){ // mianzi_type 0暗顺，1暗刻，2明顺，3明刻/杠, 4暗杠
 			if (obj.mianzi_array[i][0] > 40){
-				let a = 6;
 				switch (obj.mianzi_array[i][0]){ // this.yi = [0, 0, 0, 0, 0]; //0中 1发 2白 3门风 4圈风
-					case 51: a = 0; score++; break;
-					case 53: a = 1; score++; break;
-					case 55: a = 2; score++; break;
+					case 51: obj.yi[0]++; score++; break;
+					case 53: obj.yi[1]++; score++; break;
+					case 55: obj.yi[2]++; score++; break;
 				}
 				if(obj.mianzi_array[i][0] == self_wind){
-					a = 3;
+					obj.yi[3]++;
 					score++;
 				}
 				if(obj.mianzi_array[i][0] == circle_wind){
-					a = 4;
+					obj.yi[4]++;
 					score++;
 				}
-				if (a < 5) obj.yi[a]++;
 			}
 		}
 	}
@@ -1354,6 +1356,8 @@ class mianzi {
 
 		if (all.length == 2){
 			this.jiang[0] = this.last_tile;
+			this.mianzi_array[this.possible_mianzi] = out_tiles_temp.copy();
+			this.mianzi_type[this.possible_mianzi] = out_type_temp.copy();
 			this.possible_mianzi = 1;
 			return;
 		}
@@ -1394,7 +1398,7 @@ class mianzi {
 				this.possible_mianzi ++;
 			}
 			
-			if (triplets_num == (tiles.length - 2) / 3){
+			if (triplets_num == tiles_copy.length / 3){
 				this.mianzi_array.push([]);
 				this.mianzi_type.push([]);
 				this.mianzi_array[this.possible_mianzi] = out_tiles_temp.copy();
@@ -1674,10 +1678,6 @@ function calculate_not_yiman(tiles, last_tile){
 		
 	}
 
-	//return content;
-
-
-
 	let obj_array = [];
 	let highest_fan = 0;
 	let highest_index = 0;
@@ -1685,7 +1685,7 @@ function calculate_not_yiman(tiles, last_tile){
 	for (let i = 0; i < possible_mianzi; i++){
 		let obj = calculate_not_yiman_fan(mianzis, i, tiles, last_tile);
 		obj_array.push(obj);
-		if (obj.fan > highest_fan){
+		if (obj.fan >= highest_fan){
 			highest_fan = obj.fan;
 			highest_index = i;
 		}
@@ -1693,6 +1693,7 @@ function calculate_not_yiman(tiles, last_tile){
 
 	let fan = highest_fan;
 	let final_obj = obj_array[highest_index];
+	console.log(fan);
 
 	switch (richi_state){
 		case 1: content += "立直 1 番<br>"; fan += 1; break;
@@ -1749,7 +1750,6 @@ function calculate_not_yiman(tiles, last_tile){
 			}
 			content += temp;
 			content += " 1 番<br>";
-			fan++;
 		}
 	}
 
@@ -1773,12 +1773,11 @@ function calculate_not_yiman_fan(obj, num, tiles, last_tile) {
 			fan_dic[j](one_pos);
 		}
 		obj_array.push(one_pos);
-		if (one_pos.fan > highest_fan){
+		if (one_pos.fan >= highest_fan){
 			highest_fan = one_pos.fan;
 			highest_index = i;
 		}
 	}
-
 	return obj_array[highest_index];
 }
 
