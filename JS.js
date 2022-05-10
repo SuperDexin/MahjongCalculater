@@ -1165,12 +1165,11 @@ fan_dic[12] = function fan_1qi (obj){
 			|| obj.mianzi_array[i][0] % 10 == 7)){
 			shun ++;
 			temp += temp_dic[obj.mianzi_array[i][0]];
-			console.log(obj.mianzi_array[i][0]);
 		}
 	}
 
 	if (shun == 3)
-		return (temp % 111 == 0) ? add_fan(index, score) : false;
+		return (temp % 111 == 0) ? obj.add_fan(index, score) : false;
 
 	if (shun == 4)
 		for (let i of obj.mianzi_array)
