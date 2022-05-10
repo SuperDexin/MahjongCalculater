@@ -931,20 +931,15 @@ let fan_name_dic = {
 
 let fan_dic = {};
 fan_dic[0] = function fan_qidui (obj){
-	if (!menqing) return false;
 	let index = 0;
 	let score = 2;
-
-	let all = obj.all.copy();
-
-	if (check_seven_pairs(all))
-		return obj.add_fan(index, score);
-
+	if (obj.qidui) return obj.add_fan(index, score);
 	return false;
 };
 
 fan_dic[1] = function fan_erbei (obj){
 	if (!menqing) return false;
+	if (obj.qidui) return false;
 	let index = 1;
 	let score = 3;
 
@@ -1231,6 +1226,7 @@ fan_dic[14] = function fan_3tongshun (obj){
 
 fan_dic[15] = function fan_chunquan (obj){
 	if (obj.qidui) return false;
+	if (obj.fan_score_array[10] != 0) return false;//混老头
 	let index = 15;
 	let score = menqing ? 3 : 2;
 	let shun_array = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
@@ -1250,6 +1246,8 @@ fan_dic[15] = function fan_chunquan (obj){
 
 fan_dic[16] = function fan_hunquan (obj){
 	if (obj.qidui) return false;
+	if (obj.fan_score_array[10] != 0) return false;//混老头
+
 	let all = obj.all.copy();
 	if (all[13] < 40) return false;
 
@@ -1304,13 +1302,14 @@ fan_dic[17] = function fan_yi (obj){
 class mianzi {
 	constructor(tiles, last_tile) {
 		this.tiles = [];
-		this.tiles = this.tiles.copy();
+		this.tiles = tiles.copy();
 		this.last_tile = last_tile;
 		this.mianzi_array = [[]];
 		this.mianzi_type = [[]];
 		this.jiang = [];
 		this.possible_mianzi = 0;
 		this.hand_tiles = hand_tiles.copy();
+		this.qidui = false;
 	}
 
 	check_seq (tiles){
@@ -1342,6 +1341,15 @@ class mianzi {
 
 
 	split_mianzi(){
+		let check_qidui = this.tiles.copy();
+		check_qidui.push(this.last_tile);
+		check_qidui.sort_tiles();
+		if (check_seven_pairs(check_qidui)){
+			this.qidui = true;
+			this.possible_mianzi = 1;
+			return;
+		}
+
 		let out_tiles_temp = [];
 		let out_type_temp = [];
 		for (let i = 0; i < out_group_num; i++){
@@ -1593,14 +1601,21 @@ class mianzi {
 
 class one_of_possible_mianzi{
 	constructor(obj, num, tiles, last_tile){
-		this.mianzi_array = obj.mianzi_array[num];
-		this.mianzi_type = obj.mianzi_type[num];
-		this.jiang = obj.jiang[num];
+		this.qidui = obj.qidui;
 		this.tiles = tiles;
 		this.last_tile = last_tile;
-		this.hu_pos = [];
-		this.hu_pos_num = 0;
-		this.find_hu_pos();
+		if (!this.qidui){
+			this.mianzi_array = obj.mianzi_array[num];
+			this.mianzi_type = obj.mianzi_type[num];
+			this.jiang = obj.jiang[num];
+			this.hu_pos = [];
+			this.hu_pos_num = 0;
+			this.find_hu_pos();
+		}
+		else {
+			this.hu_pos_num = 1;
+		}
+				
 	}
 
 	find_hu_pos(){
@@ -1620,15 +1635,19 @@ class one_of_possible_mianzi{
 
 class one_of_possible_hu_pos {
 	constructor(obj, num){
-		this.mianzi_array = obj.mianzi_array;
-		this.mianzi_type = obj.mianzi_type;
-		this.jiang = obj.jiang;
+		this.qidui = obj.qidui;
 		this.tiles = obj.tiles;
 		this.last_tile = obj.last_tile;
-		this.hu_pos = obj.hu_pos[num];
+
+		if (!this.qidui){
+			this.mianzi_array = obj.mianzi_array;
+			this.mianzi_type = obj.mianzi_type;
+			this.jiang = obj.jiang;
+			this.hu_pos = obj.hu_pos[num];
+		}
+		
 		this.fan = 0;
 		this.fan_score_array = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-		this.qidui = false;
 		this.all = this.tiles.copy();
 		this.all.push(this.last_tile);
 		this.all.sort_tiles();
@@ -1641,13 +1660,6 @@ class one_of_possible_hu_pos {
 		this.fan_score_array[index] = num;
 		this.fan += num;
 
-		if (index == 0) //七对
-			this.qidui = true;
-		if (index == 1 && this.qidui){ // 两杯
-			this.qidui = false;
-			this.fan -= 2;
-			this.fan_score_array[0] = 0;
-		}
 		return true;
 	}
 }
@@ -1761,13 +1773,14 @@ function calculate_not_yiman(tiles, last_tile){
 	content += `宝牌 ${dora_num} 番<br>`;
 	fan += dora_num;
 
+	final_obj.fan = fan;
 	content += `共计 ${fan} 番<br><br>`;
 
 	content += calculate_fu(final_obj);
 	let fu = final_obj.fu;
 
 	content += `共计 ${fu} 符<br>`;
-	if (fu % 10 != 0)
+	if (fu % 10 != 0 && !final_obj.qidui)
 		content += `切上 ${Math.ceil(fu / 10) * 10} 符<br>`;
 
 	content += "<br>";
@@ -1832,7 +1845,7 @@ function calculate_fu(obj){
 		}
 		if (temp == 4 && !extra_states[0]){
 			obj.fu = 30;
-			content = "副露平和型荣和 30 符<br>";
+			content = "平和型荣和 30 符<br>";
 			return content;			
 		}
 	}
@@ -1922,8 +1935,8 @@ function calculate_fu(obj){
 
 function calculate_dian (obj){
 	let fu = obj.fu;
-	fu = Math.ceil(fu / 10) * 10;
-	let fan = obj.fan + dora_num;
+	if (!obj.qidui) fu = Math.ceil(fu / 10) * 10;
+	let fan = obj.fan;
 	let content = "";
 	let total;
 	let xian_point;
@@ -1951,25 +1964,23 @@ function calculate_dian (obj){
 		}
 	} 
 	if (self_wind == 41){
-		total = 6 * a + 300 * chang_num;
+		total = Math.ceil(6 * a / 100) * 100 + 300 * chang_num;
 		if(extra_states[0]){
-			xian_point = 2 * a + 100 * chang_num;
+			xian_point = Math.ceil(2 * a / 100) * 100 + 100 * chang_num;
 			content += `庄家 自摸 获 ${total} 点<br>每家付 ${xian_point} 点<br>`;
 		}
 		else{
-			xian_point = 6 * a + 300 * chang_num;
 			content += `庄家 荣胡 获 ${total} 点<br>`;
 		}
 	}
 	else {
-		total = 4 * a + 300 * chang_num;
+		total = Math.ceil(4 * a / 100) * 100 + 300 * chang_num;
 		if(extra_states[0]){
-			xian_point = 1 * a + 100 * chang_num;
-			zhuang_point = 2 * a + 100 * chang_num;
+			xian_point = Math.ceil(1 * a / 100) * 100 + 100 * chang_num;
+			zhuang_point = Math.ceil(2 * a / 100) * 100 + 100 * chang_num;
 			content += `闲家 自摸 获 ${total} 点<br>庄家付 ${zhuang_point} 点<br>闲家付 ${xian_point} 点<br>`;
 		}
 		else{
-			xian_point = 4 * a + 300 * chang_num;
 			content += `闲家 荣胡 获 ${total} 点<br>`;
 		}
 	}
