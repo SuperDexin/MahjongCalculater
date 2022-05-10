@@ -1146,15 +1146,15 @@ fan_dic[12] = function fan_1qi (obj){
 	let shun = 0;
 	let temp = 0;
 	let temp_dic = {
-		11: 11,
-		14: 22,
-		17: 33,
-		21: 5,
-		24: 10,
-		27: 15,
-		31: 7,
-		34: 14,
-		37: 21
+		11: 1,
+		14: 10,
+		17: 100,
+		21: 2,
+		24: 20,
+		27: 200,
+		31: 3,
+		34: 30,
+		37: 300
 	};
 
 	for (let i = 0; i < 4; i++){
@@ -1165,15 +1165,16 @@ fan_dic[12] = function fan_1qi (obj){
 			|| obj.mianzi_array[i][0] % 10 == 7)){
 			shun ++;
 			temp += temp_dic[obj.mianzi_array[i][0]];
+			console.log(obj.mianzi_array[i][0]);
 		}
 	}
 
 	if (shun == 3)
-		return (temp % 6 == 0) ? add_fan(index, score) : false;
+		return (temp % 111 == 0) ? add_fan(index, score) : false;
 
 	if (shun == 4)
 		for (let i of obj.mianzi_array)
-			if ((temp - temp_dic[i[0]]) % 6 == 0) return obj.add_fan(index, score);
+			if ((temp - temp_dic[i[0]]) % 111 == 0) return obj.add_fan(index, score);
 
 	return false;
 };
@@ -1861,11 +1862,15 @@ function calculate_fu(obj){
 	}
 	
 	content += "底符 20 符<br>"
-	if (menqing) {
+	if (menqing && !extra_states[0]) {
 		fu += 10;
-		content += "门清 10 符<br>";
+		content += "门清荣和 10 符<br>";
 	}
-	if(pos[0] == 5){ //单钓将
+	if (extra_states[0]){
+		fu += 2;
+		content += "自摸 2 符<br>";
+	}
+	if (pos[0] == 5){ //单钓将
 		fu += 2;
 		content += "钓将 2 符<br>";
 	}
