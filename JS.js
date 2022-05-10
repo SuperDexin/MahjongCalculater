@@ -1709,13 +1709,23 @@ function calculate_not_yiman(tiles, last_tile){
 	let obj_array = [];
 	let highest_fan = 0;
 	let highest_index = 0;
+	let highest_fu = 0;
 
 	for (let i = 0; i < possible_mianzi; i++){
 		let obj = calculate_not_yiman_fan(mianzis, i, tiles, last_tile);
+		calculate_fu(obj);
 		obj_array.push(obj);
-		if (obj.fan >= highest_fan){
+		if (obj.fan > highest_fan){
 			highest_fan = obj.fan;
 			highest_index = i;
+			highest_fu = obj.fu;
+		}
+		else if (obj.fan == highest_fan){
+			if (obj.fu > highest_fu){
+				highest_fan = obj.fan;
+				highest_index = i;
+				highest_fu = obj.fu;
+			}
 		}
 	}
 
@@ -1747,12 +1757,12 @@ function calculate_not_yiman(tiles, last_tile){
 		fan += 1;
 	}
 
-	if (extra_states[4] && self_wind == 41){
+	if (extra_states[4] && extra_states[0]){
 		content += "海底捞月 1 番<br>"
 		fan += 1;
 	}
 
-	if (extra_states[4] && self_wind != 41){
+	if (extra_states[4] && !extra_states[0]){
 		content += "河底捞鱼 1 番<br>"
 		fan += 1;
 	}
@@ -1808,15 +1818,25 @@ function calculate_not_yiman_fan(obj, num, tiles, last_tile) {
 	let obj_array = [];
 	let highest_fan = 0;
 	let highest_index = 0;
+	let highest_fu = 0;
 	for (let i = 0; i < hu_pos_num; i++){
 		let one_pos = new one_of_possible_hu_pos(one, i);
 		for (let j = 0; j < 18; j++){
 			fan_dic[j](one_pos);
 		}
+		calculate_fu(one_pos);
 		obj_array.push(one_pos);
-		if (one_pos.fan >= highest_fan){
+		if (one_pos.fan > highest_fan){
 			highest_fan = one_pos.fan;
 			highest_index = i;
+			highest_fu = one_pos.fu;
+		}
+		else if (one_pos.fan == highest_fan){
+			if (one_pos.fu > highest_fu){
+				highest_fan = one_pos.fan;
+				highest_index = i;
+				highest_fu = one_pos.fu;
+			}
 		}
 	}
 	return obj_array[highest_index];
@@ -1956,6 +1976,11 @@ function calculate_dian (obj){
 	let xian_point;
 	let zhuang_point;
 	let a;
+
+	if (fan == dora_num){
+		return "无役<br>"
+	}
+
 
 	if (fan >= 5){
 		switch(fan){
