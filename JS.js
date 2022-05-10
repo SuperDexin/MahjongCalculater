@@ -939,7 +939,7 @@ fan_dic[0] = function fan_qidui (obj){
 
 fan_dic[1] = function fan_erbei (obj){
 	if (!menqing) return false;
-	if (obj.qidui) return false;
+	if (obj.only_qidui) return false;
 	let index = 1;
 	let score = 3;
 
@@ -1310,6 +1310,7 @@ class mianzi {
 		this.possible_mianzi = 0;
 		this.hand_tiles = hand_tiles.copy();
 		this.qidui = false;
+		this.only_qidui = false;
 	}
 
 	check_seq (tiles){
@@ -1344,11 +1345,6 @@ class mianzi {
 		let check_qidui = this.tiles.copy();
 		check_qidui.push(this.last_tile);
 		check_qidui.sort_tiles();
-		if (check_seven_pairs(check_qidui)){
-			this.qidui = true;
-			this.possible_mianzi = 1;
-			return;
-		}
 
 		let out_tiles_temp = [];
 		let out_type_temp = [];
@@ -1593,7 +1589,13 @@ class mianzi {
 				}
 			}
 		}
-		return;
+		if (check_seven_pairs(check_qidui)){
+			if (this.possible_mianzi == 0){
+				this.only_qidui = true;
+				this.possible_mianzi = 1;
+			}
+			this.qidui = true;
+		}
 	};
 }
 
@@ -1604,7 +1606,8 @@ class one_of_possible_mianzi{
 		this.qidui = obj.qidui;
 		this.tiles = tiles;
 		this.last_tile = last_tile;
-		if (!this.qidui){
+		this.only_qidui = obj.only_qidui;
+		if (!this.only_qidui){
 			this.mianzi_array = obj.mianzi_array[num];
 			this.mianzi_type = obj.mianzi_type[num];
 			this.jiang = obj.jiang[num];
@@ -1638,8 +1641,9 @@ class one_of_possible_hu_pos {
 		this.qidui = obj.qidui;
 		this.tiles = obj.tiles;
 		this.last_tile = obj.last_tile;
+		this.only_qidui = obj.only_qidui;
 
-		if (!this.qidui){
+		if (!this.only_qidui){
 			this.mianzi_array = obj.mianzi_array;
 			this.mianzi_type = obj.mianzi_type;
 			this.jiang = obj.jiang;
@@ -1659,6 +1663,12 @@ class one_of_possible_hu_pos {
 	add_fan(index, num){
 		this.fan_score_array[index] = num;
 		this.fan += num;
+
+		if (index == 1 && this.qidui){
+			this.qidui = false;
+			this.fan_score_array[0] = 0;
+			this.fan -= 2;
+		}
 
 		return true;
 	}
