@@ -222,6 +222,7 @@ function set_out_group_num(value){
 	out_tiles_now_num = [[0], [0], [0], [0]];
 	now_tiles_num = hidden_tiles_num[0] + hu_num[0];
 	out_type_array = [0, 0, 0, 0];
+	print("");
 }
 
 function change_region(value){
@@ -570,6 +571,7 @@ function calculate_fan(tiles, last_tile){
 
 	yiman_num = 0;
 	content += calculate_yiman(tiles, last_tile);
+	content += "<br>";
 
 	if (yiman_num != 0)
 		return content += calculate_yiman_point();
@@ -870,7 +872,7 @@ function yiman_4xi(tiles, last_tile){
 function calculate_yiman_point(){
 	if (yiman_num == 0)
 		return;
-	let content = `共计${yiman_num}倍役满<br>`;
+	let content = `共计 ${yiman_num}倍役满<br><br>`;
 	let a = 8000;
 	a = yiman_num * a;
 	let total;
@@ -881,11 +883,11 @@ function calculate_yiman_point(){
 		total = 6 * a + 300 * chang_num;
 		if(extra_states[0]){
 			xian_point = 2 * a + 100 * chang_num;
-			content += `庄家自摸获${total}点 每家付${xian_point}点`;
+			content += `庄家 自摸 获 ${total} 点<br>每家付 ${xian_point} 点<br>`;
 		}
 		else{
 			xian_point = 6 * a + 300 * chang_num;
-			content += `庄家荣胡获${total}点 放铳者付${xian_point}点`;
+			content += `庄家 荣胡 获 ${total} 点<br>`;
 		}
 	}
 	else {
@@ -893,11 +895,11 @@ function calculate_yiman_point(){
 		if(extra_states[0]){
 			xian_point = 1 * a + 100 * chang_num;
 			zhuang_point = 2 * a + 100 * chang_num;
-			content += `闲家自摸获${total}点 庄家付${zhuang_point}点 闲家付${xian_point}点`;
+			content += `闲家 自摸 获 ${total} 点<br>庄家付 ${zhuang_point} 点<br>闲家付 ${xian_point} 点<br>`;
 		}
 		else{
 			xian_point = 4 * a + 300 * chang_num;
-			content += `闲家荣胡获${total}点 放铳者付${xian_point}点`;
+			content += `闲家 荣胡 获 ${total} 点<br>`;
 		}
 	}
 	return content;
@@ -1632,6 +1634,7 @@ class one_of_possible_hu_pos {
 		this.all.sort_tiles();
 
 		this.yi = [0, 0, 0, 0, 0]; //0中 1发 2白 3门风 4圈风
+		this.fu = 0;
 	}
 
 	add_fan(index, num){
@@ -1658,28 +1661,28 @@ function calculate_not_yiman(tiles, last_tile){
 	let mianzi_type = mianzis.mianzi_type;
 	let jiang = mianzis.jiang;
 	let possible_mianzi = mianzis.possible_mianzi;
-
 	let content = "";
-	for (let i = 0; i < possible_mianzi; i++){
-		content += "组" + (i + 1) + ":<br>";
-		for (let j = 0; j < 4; j++){
-			for (let k = 0; k < 3; k++){
-				content += all_tiles_dic[mianzi_array[i][j][k]];
-			}
-			let temp;
-			switch (mianzi_type[i][j]){
-				case 0: temp = "（暗顺）"; break;
-				case 1: temp = "（暗刻）"; break;
-				case 2: temp = "（明顺）"; break;
-				case 3: temp = "（明刻/杠）"; break;
-				case 4: temp = "（暗杠）"; break;
-			}
-			content += temp;
-			content += "<br>";
-		}
-		content += all_tiles_dic[jiang[i]] + all_tiles_dic[jiang[i]] + "<br> <br>";
+
+	// for (let i = 0; i < possible_mianzi; i++){
+	// 	content += "组" + (i + 1) + ":<br>";
+	// 	for (let j = 0; j < 4; j++){
+	// 		for (let k = 0; k < 3; k++){
+	// 			content += all_tiles_dic[mianzi_array[i][j][k]];
+	// 		}
+	// 		let temp;
+	// 		switch (mianzi_type[i][j]){
+	// 			case 0: temp = "（暗顺）"; break;
+	// 			case 1: temp = "（暗刻）"; break;
+	// 			case 2: temp = "（明顺）"; break;
+	// 			case 3: temp = "（明刻/杠）"; break;
+	// 			case 4: temp = "（暗杠）"; break;
+	// 		}
+	// 		content += temp;
+	// 		content += "<br>";
+	// 	}
+	// 	content += all_tiles_dic[jiang[i]] + all_tiles_dic[jiang[i]] + "<br> <br>";
 		
-	}
+	// }
 
 	let obj_array = [];
 	let highest_fan = 0;
@@ -1696,7 +1699,6 @@ function calculate_not_yiman(tiles, last_tile){
 
 	let fan = highest_fan;
 	let final_obj = obj_array[highest_index];
-	console.log(fan);
 
 	switch (richi_state){
 		case 1: content += "立直 1 番<br>"; fan += 1; break;
@@ -1759,7 +1761,20 @@ function calculate_not_yiman(tiles, last_tile){
 	content += `宝牌 ${dora_num} 番<br>`;
 	fan += dora_num;
 
-	content += `共计 ${fan} 番`;
+	content += `共计 ${fan} 番<br><br>`;
+
+	content += calculate_fu(final_obj);
+	let fu = final_obj.fu;
+
+	content += `共计 ${fu} 符<br>`;
+	if (fu % 10 != 0)
+		content += `切上 ${Math.ceil(fu / 10) * 10} 符<br>`;
+
+	content += "<br>";
+
+	content += calculate_dian(final_obj);
+
+
 	return content;
 }
 
@@ -1784,7 +1799,182 @@ function calculate_not_yiman_fan(obj, num, tiles, last_tile) {
 	return obj_array[highest_index];
 }
 
+function calculate_fu(obj){
+	let content = "";
+	let fu = 20;
+	let pos = obj.hu_pos;
 
+	if(obj.qidui){
+		obj.fu = 25;
+		content = "七对 25 符<br>";
+		return content;
+	}
+
+	if (obj.fan_score_array[11] && extra_states[0]){ //平和自摸
+		obj.fu = 20;
+		content = "平和自摸 20 符<br>";
+		return content;	
+	}
+
+	
+	if (obj.last_tile < 40){
+		let temp = 0;
+		for (let i = 0; i < 4; i++){
+			if (obj.mianzi_type[i] == 0 || obj.mianzi_type[i] == 2) // mianzi_type 0暗顺，1暗刻，2明顺，3明刻/杠, 4暗杠
+				temp++;
+		}
+
+		if (temp == 4){
+			if (obj.hu_pos[0] == 5) temp = 0;
+			if (obj.hu_pos[1] == 1) temp = 0; // 坎张
+			if ((obj.last_tile % 10 == 3 && obj.hu_pos[1] == 2) || (obj.last_tile % 10 == 7 && obj.hu_pos[1] == 0)) //边张
+				temp = 0;			
+		}
+		if (temp == 4 && !extra_states[0]){
+			obj.fu = 30;
+			content = "副露平和型荣和 30 符<br>";
+			return content;			
+		}
+	}
+	
+	content += "底符 20 符<br>"
+	if (menqing) {
+		fu += 10;
+		content += "门清 10 符<br>";
+	}
+	if(pos[0] == 5){ //单钓将
+		fu += 2;
+		content += "钓将 2 符<br>";
+	}
+	else if (obj.mianzi_type[pos[0]] == 0){ // mianzi_type 0暗顺，1暗刻，2明顺，3明刻/杠, 4暗杠
+		if ((obj.last_tile % 10 == 3 && obj.hu_pos[1] == 2) || (obj.last_tile % 10 == 7 && obj.hu_pos[1] == 0)){ //边张
+			fu += 2;
+			content += "边张 2 符<br>";
+		}
+		else if (obj.hu_pos[1] == 1){ // 坎张
+			fu += 2;
+			content += "坎张 2 符<br>";
+		}
+	}
+	if (obj.jiang == circle_wind){
+		fu += 2;
+		content += "圈风将 2 符<br>";
+	}
+	if (obj.jiang == self_wind){
+		fu += 2;
+		content += "门风将 2 符<br>";
+	}
+	if (obj.jiang > 50){
+		fu += 2;
+		content += "役牌将 2 符<br>";
+	}
+
+	let anke = 0;
+	let mingke = 0;
+	let angang = 0;
+	let minggang = 0;
+	let anke_19 = 0;
+	let mingke_19 = 0;
+	let angang_19 = 0;
+	let minggang_19 = 0; 
+
+	for (let i = 0; i < out_group_num; i++){
+		if(out_type_array[i] == 2){ //0无 1顺 2刻 3明杠 4暗杠
+			if (out_tiles[i][0] > 40 || out_tiles[i][0] % 10 == 1 || out_tiles[i][0] % 10 == 9)
+				mingke_19 += 4;
+			else mingke += 2;
+		}
+		if(out_type_array[i] == 3){ //0无 1顺 2刻 3明杠 4暗杠
+			if (out_tiles[i][0] > 40 || out_tiles[i][0] % 10 == 1 || out_tiles[i][0] % 10 == 9)
+				minggang_19 += 16;
+			else minggang += 8;
+		}
+		if(out_type_array[i] == 4){ //0无 1顺 2刻 3明杠 4暗杠
+			if (out_tiles[i][0] > 40 || out_tiles[i][0] % 10 == 1 || out_tiles[i][0] % 10 == 9)
+				angang_19 += 32;
+			else angang += 16;
+		}
+	}
+
+	for (let i = 0; i < 4; i++){
+		if (obj.mianzi_type[i] == 1){ // mianzi_type 0暗顺，1暗刻，2明顺，3明刻/杠, 4暗杠
+			if (obj.mianzi_array[i][0] > 40 || obj.mianzi_array[i][0] % 10 == 1 || obj.mianzi_array[i][0] % 10 == 9)
+				anke_19 += 8;
+			else anke += 4;
+		}
+	}
+
+	fu = fu + anke + mingke + angang + minggang + anke_19 + mingke_19 + angang_19 + minggang_19;
+
+	obj.fu = fu;
+
+	if (mingke != 0) content += `明刻 ${mingke} 符<br>`;
+	if (mingke_19 != 0) content += `明幺九刻 ${mingke_19} 符<br>`;	
+	if (anke != 0) content += `暗刻 ${anke} 符<br>`;
+	if (anke_19 != 0) content += `暗幺九刻 ${anke_19} 符<br>`;
+	if (minggang != 0) content += `明杠 ${minggang} 符<br>`;
+	if (minggang_19 != 0) content += `明幺九杠 ${minggang_19} 符<br>`;
+	if (angang != 0) content += `暗杠 ${angang} 符<br>`;
+	if (angang_19 != 0) content += `暗幺九杠 ${angang_19} 符<br>`;
+
+	return content;
+}
+
+function calculate_dian (obj){
+	let fu = obj.fu;
+	fu = Math.ceil(fu / 10) * 10;
+	let fan = obj.fan + dora_num;
+	let content = "";
+	let total;
+	let xian_point;
+	let zhuang_point;
+	let a;
+
+	if (fan >= 5){
+		switch(fan){
+			case 5: a = 2000; content += "满贯<br>"; break;
+			case 6: 
+			case 7: a = 3000; content += "跳满<br>"; break;
+			case 8:
+			case 9:
+			case 10: a = 4000; content += "倍满<br>"; break;
+			case 11:
+			case 12: a = 6000; content += "三倍满<br>"; break;
+			default: a = 8000; content += "累计役满<br>"; break;
+		}
+	}
+	else{
+		a = fu * (2 ** (2 + fan));
+		if (a > 2000){
+			a = 2000;
+			content += "满贯<br>";
+		}
+	} 
+	if (self_wind == 41){
+		total = 6 * a + 300 * chang_num;
+		if(extra_states[0]){
+			xian_point = 2 * a + 100 * chang_num;
+			content += `庄家 自摸 获 ${total} 点<br>每家付 ${xian_point} 点<br>`;
+		}
+		else{
+			xian_point = 6 * a + 300 * chang_num;
+			content += `庄家 荣胡 获 ${total} 点<br>`;
+		}
+	}
+	else {
+		total = 4 * a + 300 * chang_num;
+		if(extra_states[0]){
+			xian_point = 1 * a + 100 * chang_num;
+			zhuang_point = 2 * a + 100 * chang_num;
+			content += `闲家 自摸 获 ${total} 点<br>庄家付 ${zhuang_point} 点<br>闲家付 ${xian_point} 点<br>`;
+		}
+		else{
+			xian_point = 4 * a + 300 * chang_num;
+			content += `闲家 荣胡 获 ${total} 点<br>`;
+		}
+	}
+	return content;
+}
 
 
 //---------------------------------------//
