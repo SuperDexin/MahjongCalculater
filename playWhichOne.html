@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="cn">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" >
+	<title>Play Which Tile?</title>
+	<style>
+		html body {
+			width: 100%;
+			height:  100%;
+			text-align: center;
+			overflow-x: hidden;
+			overflow-y: scroll;
+		}
+		.background {
+			margin: 0;
+			max-width: 400px;
+			width: 95%;
+			display: inline-block;
+			text-align: left;
+		}
+		#hands {
+			border: 1px black solid;
+			height: calc(2.5rem + 2px);
+			width: calc(1.4rem * 14 + 30px);
+			padding: 1px;
+			display: flex;
+			align-items: flex-start;
+		}
+		#hands > button {
+			height: 2.5rem;
+			width: 1.4rem;
+			padding: 0px;
+			margin: 1px;
+			background: white;
+			border-left: 1px;
+			border-right: 3px;
+			border-top: 3px;
+			border-bottom: 1px;
+			border-radius: 3px;
+			border-style: outset;
+			border-color: darkgray;
+		}
+		.link {
+			color: gray;
+		}
+
+		.link:not(:hover) {
+			text-decoration: none;
+		}
+	</style>
+	<script src="./playWhichOne.js"></script>
+</head>
+<body>
+<div class="background">
+	<h1 style="margin-bottom: 0; width: auto;">打哪张进张最多？</h1>
+	<p style="margin-top: 0; margin-bottom: 5px;">Made by <a class="link" href="https://github.com/SuperDexin">@SuperDexin</a></p>
+	<p><a href="/index.html">麻将计算器</a></p>
+	<button onclick="show_answer()">显示答案</button><button onclick="refresh()">刷新</button>
+	<br>
+	<div id="hands"></div>
+	<br>
+	<div id="answer"></div>
+
+</div>
+
+<script>
+	refresh();
+</script>
+
+</body>
+</html>
