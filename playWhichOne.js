@@ -290,7 +290,7 @@ function creat_question(){
 
 	question_array_copy.sort_tiles();
 
-	if (cal_can_be_played(question_array_copy) < 2)
+	if (cal_can_be_played(question_array_copy) < 3)
 		return creat_question();
 
 	return question_array_copy;
