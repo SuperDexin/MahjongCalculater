@@ -208,23 +208,31 @@ function show_answer(id){
 	id = parseInt(id);
 	let content = "";
 	let correct = false;
-	for (let i = 0; i < best_one.length; i++){
-		if (id == best_one[i]){
-			correct = true;
-			break;
+
+	if(id != 0){
+		for (let i = 0; i < best_one.length; i++){
+			if (id == best_one[i]){
+				correct = true;
+				break;
+			}
 		}
+		if (correct){
+			content = "<span style='color: green; font-size: 1.5rem'>回答正确！</span><br>";
+		} else {
+			content = "<span style='color: red; font-size: 1.5rem'>回答错误！</span><br>";
+		}
+		content += `您的回答：${all_tiles_dic[id]}<br>`;
 	}
-	if (correct){
-		content = "<span style='color: green; font-size: 1.5rem'>回答正确！</span><br>";
-	} else {
-		content = "<span style='color: red; font-size: 1.5rem'>回答错误！</span><br>";
-	}
-	content += `您的回答：${all_tiles_dic[id]}  正确答案：`;
+	
+	content += `正确答案：`;
 	for (let i = 0; i < best_one.length; i++){
 		content += `${all_tiles_dic[best_one[i]]} `;
 	}
 
 	content += "<br><br>" + answer_content;
+
+	content += "<br>";
+	content += "<button onclick='refresh()' style='color:red; font-size:2rem;'>再来一局</button>"
 
 	document.getElementById("answer").innerHTML = content;
 }
@@ -317,7 +325,7 @@ function cal_answer(tiles){
 	}
 	let content = "";
 	for (let i = 0; i < choices; i++){
-		content += `打${all_tiles_dic[can_be_played[i]]} 听${tings_tiles_num[i]}张 听`;
+		content += `打${all_tiles_dic[can_be_played[i]]} 听${tings_tiles_num[i]}张: `;
 		for(let j = 0; j < tings[i].length; j++){
 			content += ` ${all_tiles_dic[tings[i][j]]}`;
 		}
