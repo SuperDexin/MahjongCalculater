@@ -2,8 +2,8 @@ let zimo = false;
 let zhuang = false;
 let yiman = false;
 let chang = 0;
-let fu = 0;
-let fan = 0;
+let fu = 20;
+let fan = 1;
 let bei = 1;
 
 function set_zimo(){
