@@ -571,7 +571,7 @@ function calculate_fan(tiles, last_tile){
 
 	yiman_num = 0;
 	content += calculate_yiman(tiles, last_tile);
-	content += "<br>";
+	content += "";
 
 	if (yiman_num != 0)
 		return content += calculate_yiman_point();

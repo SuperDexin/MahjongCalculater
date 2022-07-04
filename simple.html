@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="cn">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
+	<title>Simple Mahjong Calculator</title>
+	<style>
+		html body {
+			width: 100%;
+			height:  100%;
+			text-align: center;
+			overflow-x: hidden;
+			overflow-y: scroll;
+		}
+		.background {
+			margin: 0;
+			max-width: 400px;
+			width: 95%;
+			display: inline-block;
+			text-align: left;
+		}
+		#hands {
+			border: 1px black solid;
+			height: calc(2.5rem + 2px);
+			width: calc(1.2rem * 13 + 28px);
+			padding: 1px;
+			display: flex;
+			align-items: flex-start;
+		}
+		#winner {
+			border: 1px black solid;
+			height: calc(2.5rem + 2px);
+			width: calc(1.2rem + 2px);
+			padding: 1px;
+		}
+		#hands > button {
+			height: 2.5rem;
+			width: 1.2rem;
+			padding: 0px;
+			margin: 1px;
+			background: white;
+			border-left: 1px;
+			border-right: 3px;
+			border-top: 3px;
+			border-bottom: 1px;
+			border-radius: 3px;
+			border-style: outset;
+			border-color: darkgray;
+		}
+		#winner > button {
+			height: 2.5rem;
+			width: 1.2rem;
+			background: white;
+			margin: 1px;
+			border: 1px black solid;
+			padding: 0px;
+		}
+		#set_out_group_num {
+			height: 1rem;
+			width: 100%;
+		}
+		#set_out_group_num button{
+			height: auto;
+			width: 1.2rem;
+			background: white;
+			margin: 1px;
+			border: 1px black solid;
+			padding: 0px;
+		}
+		#out_tiles {
+			display: flex;
+			justify-content: space-between;
+			margin: 0;
+			padding: 0;
+		}
+		.out_tiles {
+			border: 1px black solid;
+			height: calc(2.5rem + 2px);
+			width: calc(1.2rem * 3 + 6px);
+			padding: 1px;
+			display: flex;
+			align-items: flex-start;
+			margin: 0;
+		}
+		.out_tiles > button {
+			height: 2.5rem;
+			width: 1.2rem;
+			padding: 0px;
+			margin: 1px;
+			background: white;
+			border-left: 1px;
+			border-right: 3px;
+			border-top: 1px;
+			border-bottom: 3px;
+			border-radius: 3px;
+			border-style: outset;
+			border-color: darkgray;
+		}
+
+		#tiles {
+			width: 100%;
+			text-align: center;
+		}
+		#tiles > div {
+			width: 100%;
+			display: flex;
+			justify-content: space-between;
+			margin: 0.5rem auto;
+		}
+		#tiles button {
+			width: 2rem;
+			padding: 0;
+		}
+		.link {
+			color: gray;
+		}
+
+		.link:not(:hover) {
+			text-decoration: none;
+		}
+
+	</style>
+	<script src="./simple.js"></script>
+</head>
+
+
+<body>
+	<div class="background">
+		<h1 style="margin-bottom: 0; width: auto;">日本麻将简易计算器</h1>
+		<p style="margin-top: 0; margin-bottom: 5px;">Made by <a class="link" href="https://github.com/SuperDexin">@SuperDexin</a></p>
+		<a href="/MahjongCalculater/playWhichOne.html">打哪张小游戏</a>
+		<p><a href="/MahjongCalculater/index.html">麻将计算器</a></p>
+		<div style="width: 95%">
+			<div class="choises">选项：
+				<div style="margin-left: 2rem;">
+					<p><input type="checkbox" id="zimo" onchange="set_zimo()">
+						<label for="zimo">自摸</label>
+						<input type="checkbox" id="zhuang" onchange="set_zhuang()">
+						<label for="zhuang">庄家</label>
+						<input type="checkbox" id="yiman" onchange="set_yiman()">
+						<label for="yiman">役满</label></p>
+					<p><input type="textarea" id="benchang" style="width:1.5em" onchange="change_chang(this.value)" value=0>
+						<label for="benchang">本场</label>
+						<input type="textarea" id="fu" style="width:1.5em; margin-left: 0.5rem" onchange="change_fu(this.value)" value=0>
+						<label for="fu" id="label_fu">符</label>
+						<input type="textarea" id="fan" style="width:1.5em; margin-left: 0.5rem" onchange="change_fan(this.value)" value=0>
+						<label for="fan" id="label_fan">番</label>
+						<input type="textarea" id="bei" style="width:1.5em; margin-left: 0.5rem" onchange="change_bei(this.value)" value=1 hidden=true>
+						<label for="bei" id="label_bei" hidden=true>倍役满</label>
+					</p>
+				</div>
+			</div>
+			<div style="margin-top: 0.5em">状态：<br><span style="margin-left:2em" id="user_state"></span></div>
+			<div style="margin-top: 0.5em">结果：<br><div style="margin-left:2em" id="answer"></div></div>
+		</div>
+	</div>
+	<script>
+		change_state();
+	</script>
+</body>
+</html>
