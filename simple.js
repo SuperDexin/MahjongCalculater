@@ -108,7 +108,6 @@ function calculate(){
 		return content;
 	}
 	else {
-		fu = Math.ceil(fu / 10) * 10;
 		content += `${fan}番${fu}符<br>`;
 		if (fan == 0 || fu == 0){
 			return content;
